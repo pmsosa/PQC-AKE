@@ -7,6 +7,10 @@ import socket
 import pickle
 import numpy as np
 from numpy.polynomial import polynomial as p
+from Crypto.Hash import SHA256
+from Crypto.Cipher import AES
+from Crypto import Random
+
 
 
 #############################################
@@ -97,7 +101,27 @@ while (i < len(u)):
 
 	i += 1
 
-print sharedBob
+    
+    
+print "Shared Secret", sharedBob
+
+##############################>----KEX ENDS
+BS = 16
+pad = lambda s: s + (BS - len(s) % BS) * chr(BS - len(s) % BS) 
+unpad = lambda s : s[0:-ord(s[-1])]
+
+
+enc_key = SHA256.new(pickle.dumps(sharedBob)).hexdigest().decode("hex")
+print enc_key.encode("hex")
+
+iv = Random.new().read(AES.block_size)
+obj = AES.new(enc_key, AES.MODE_CBC, iv)
+
+while 1:
+    ciphertext = conn.recv(BUFFER_SIZE)
+    message = unpad(obj.decrypt(ciphertext))
+    print message
+
 
 
 conn.close()

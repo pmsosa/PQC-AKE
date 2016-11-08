@@ -7,7 +7,9 @@ import socket
 import pickle
 import numpy as np
 from numpy.polynomial import polynomial as p
-
+from Crypto.Hash import SHA256
+from Crypto.Cipher import AES
+from Crypto import Random
 
 #############################################
 def gen_poly(n,q):
@@ -85,5 +87,21 @@ while (i < len(u)):
 
 print "Shared Secret", sharedAlice
 
+
+##############################>----KEX ENDS
+BS = 16
+pad = lambda s: s + (BS - len(s) % BS) * chr(BS - len(s) % BS) 
+unpad = lambda s : s[0:-ord(s[-1])]
+
+enc_key = SHA256.new(pickle.dumps(sharedAlice)).hexdigest().decode("hex")
+print enc_key.encode("hex")
+
+iv = Random.new().read(AES.block_size)
+obj = AES.new(enc_key, AES.MODE_CBC, iv)
+
+while 1:
+    message = pad(raw_input("Message: "))
+    ciphertext = obj.encrypt(message)
+    skt.send(ciphertext)
 
 skt.close()
