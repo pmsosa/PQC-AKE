@@ -5,6 +5,7 @@
 
 import socket
 import pickle
+import timeit
 import numpy as np
 from numpy.polynomial import polynomial as p
 from Crypto.Hash import SHA256
@@ -36,6 +37,7 @@ q = 2**32-1
 hlpr = [1] + [0] * (n-1) + [1]
 
 #1. Listen and Connect
+print "Waiting for connection..."
 skt = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 skt.bind((TCP_IP, TCP_PORT))
 skt.listen(1)
@@ -43,8 +45,12 @@ skt.listen(1)
 conn, addr = skt.accept()
 print 'Connection address:', addr
 
+
 #2. Get A and b (from Alice)
-A = pickle.loads(conn.recv(BUFFER_SIZE)) #In reality A would be shared
+A = pickle.loads(conn.recv(BUFFER_SIZE)) #In reality A would be KNOWN by both users
+
+kex_start = timeit.default_timer()
+
 b = pickle.loads(conn.recv(BUFFER_SIZE))
 
 #3. Calculate and send b' = A * s' + e'
@@ -102,7 +108,8 @@ while (i < len(u)):
 	i += 1
 
     
-    
+kex_end = timeit.default_timer()
+print "KEX Time (Bob): ",kex_end-kex_start    
 print "Shared Secret", sharedBob
 
 ##############################>----KEX ENDS
@@ -121,7 +128,7 @@ while 1:
     ciphertext = conn.recv(BUFFER_SIZE)
     message = unpad(obj.decrypt(ciphertext))
     print message
-
+    if (message == "quit"): break;
 
 
 conn.close()

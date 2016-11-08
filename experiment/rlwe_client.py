@@ -5,6 +5,7 @@
 
 import socket
 import pickle
+import timeit
 import numpy as np
 from numpy.polynomial import polynomial as p
 from Crypto.Hash import SHA256
@@ -39,11 +40,15 @@ skt = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 #1. CONNECT 
 skt.connect((TCP_IP, TCP_PORT))
 
-#2. SEND A
+
+#2. SEND A (IN REAL LIFE YOU WOULDN'T SEND A, THIS WOULD BE KNOWN BY BOTH USERS)
 A = np.floor(np.random.random(size=(n))*q)%q
 A = np.floor(p.polydiv(A,hlpr)[1])
 
+
 skt.send(pickle.dumps(A))
+
+kex_start = timeit.default_timer()
 
 #3. SEND b= (A * s + e)
 s = gen_poly(n,q)
@@ -85,6 +90,8 @@ while (i < len(u)):
 		print "error! (3)"
 	i += 1
 
+kex_end = timeit.default_timer()
+print "KEX Time (Alice): ",kex_end-kex_start
 print "Shared Secret", sharedAlice
 
 
@@ -94,7 +101,7 @@ pad = lambda s: s + (BS - len(s) % BS) * chr(BS - len(s) % BS)
 unpad = lambda s : s[0:-ord(s[-1])]
 
 enc_key = SHA256.new(pickle.dumps(sharedAlice)).hexdigest().decode("hex")
-print enc_key.encode("hex")
+print enc_key.encode("hex")+"\n"
 
 iv = Random.new().read(AES.block_size)
 obj = AES.new(enc_key, AES.MODE_CBC, iv)
@@ -103,5 +110,6 @@ while 1:
     message = pad(raw_input("Message: "))
     ciphertext = obj.encrypt(message)
     skt.send(ciphertext)
+    if (message == pad("quit")): break;
 
 skt.close()
