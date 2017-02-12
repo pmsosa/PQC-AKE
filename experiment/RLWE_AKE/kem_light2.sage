@@ -1,7 +1,7 @@
 # Lightweight KEM Example #
 
 from IPython import embed
-#import numpy as np
+import numpy as np
 #import sys
 
 q = 12889
@@ -40,6 +40,21 @@ def __genPolynomial(n,q,check_inverse=False):
     return list(poly)
 
 
+# Reduction a modulo q that maps coeffs: [-(q-1)/2 , -(q-1)/2]
+def modCoeffs(f,pp):
+    clist=f.list()
+    p2=int(pp/_sage_const_2 )
+    for i in range(len(clist)):
+        clist[i] = int(clist[i])%pp
+        #print clist[i],p2,clist[i]>p2,int(clist[i])-pp,type(clist[i]),clist[i]*-1
+        if clist[i]>p2:
+            clist[i]= int(clist[i]) - pp
+            #print clist[i]
+
+
+    return R(clist)
+
+
 
 ################################################################
 # Actual KEM
@@ -51,7 +66,7 @@ print "\nKeyGen"
 
 #Randomly choosing f and g (wiht small norms)
 f = [-3,-1, 0, 1] # 1x^3 + 0x^2 - 1x - 3    ## __genPolynomial(n,q,check_inverse=True)
-g = [ 1,-2, 1, 1] # 1x^3 + 1x^2 - 2x + 1    ## __genPolynomial(n,q,check_inverse=True)
+g = [ 1,-2, 1, 3] # 1x^3 + 1x^2 - 2x + 1    ## __genPolynomial(n,q,check_inverse=True)
 
 print "f:",f
 print "g:",g
@@ -63,8 +78,13 @@ Rq(g)**-1 ; R2(g)**-1
 print "g & f are invertible"
 
 g_inv = Rq(g)**-1
+g_inv = modCoeffs(g_inv,q).list()
 
-h = R(f)*g_inv
+h = R(f)*R(g_inv)
+h = h%(x**n+1)
+h = modCoeffs(h,q)
+print "h: ",h
+h = h.list()
 
 
 ######################## Encapsulation #########################
@@ -72,23 +92,57 @@ print "\nEncapsulation"
 
 #Randomly Generating r and e (with small norms)
 r = [ 1,-2, 0, 1] ## __genPolynomial(n,q,check_inverse=False)
-e = [ 2,-1,-1, 1] ##__genPolynomial(n,q,check_inverse=False)
+e = [ 2,-1,2, 1] ##__genPolynomial(n,q,check_inverse=False)
 print "r:",r
 print "e:",e
 
-t = 2*h*R(r)+R(e)
-k = R2(e)
+t = R(h)*R(r)
+t = t%(x**n+1)
+t = modCoeffs(t,q)
+t = 2*t
+t = modCoeffs(t,q)
+
+print "t1:,",t
+
+t = t+R(e)
+t = modCoeffs(t,q)
+
+print "t:,",t
+
+t = t.list()
+
+k = R2(e).list()
+
 
 ######################## Decapsulation ##########################
 
-k2 = R(g)*t
-k2 = R2(k2.list())
-k2 = k2/R(g)
-k2 = R2(k2)
+k2 = R(g)*R(t)
+k2 = k2%(x**n+1)
+k2 = modCoeffs(k2,q)
+
+print "k''':",k2
+
+k2 = modCoeffs(k2,2)
+print "k'':",k2
+
+k2 = k2*R((R2(g)**-1).list())
+k2 = k2%(x**n+1)
+
+print "k':",k2
+k2 = modCoeffs(k2,2)
+
+k2 = k2.list()
 
 
 print "\nResults:----------\n"
-print "k: ", k.list()
-print "k2: ", k2.list()
-print "t: ", t.list()
-print "t%2: ",R2(t.list()).list()
+print "k: ", k
+print "k2: ", k2
+print "t: ", t
+print "t%2: ",R2(t).list()
+embed()
+
+
+####
+print "\n\n\n\n Testing"
+print "2fr+ge",Rq(2*R(f)*R(r)+R(g)*R(e))
+print "gt mod q",Rq(R(g)*R(t))
