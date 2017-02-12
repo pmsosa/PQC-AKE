@@ -5,7 +5,7 @@ import numpy as np
 #import sys
 
 q = 12889
-n = 4 # < n^n+1 > ; n = 2^i
+n = 512 # < n^n+1 > ; n = 2^i
 
 R.<x> = ZZ['x'];
 #R = PolynomialRing(ZZ,"x")
@@ -59,90 +59,101 @@ def modCoeffs(f,pp):
 ################################################################
 # Actual KEM
 ################################################################
+def kem(n,q):
 
-print "\nNote: [5,6,7,8] refers to 8x^3 + 7x^2 + 6x + 5"
-######################## Key Generation ########################
-print "\nKeyGen"
+    print "\nNote: [5,6,7,8] refers to 8x^3 + 7x^2 + 6x + 5"
+    ######################## Key Generation ########################
+    print "\nKeyGen"
 
-#Randomly choosing f and g (wiht small norms)
-f = [-3,-1, 0, 1] # 1x^3 + 0x^2 - 1x - 3    ## __genPolynomial(n,q,check_inverse=True)
-g = [ 1,-2, 1, 3] # 1x^3 + 1x^2 - 2x + 1    ## __genPolynomial(n,q,check_inverse=True)
+    #Randomly choosing f and g (wiht small norms)
+    f = __genPolynomial(n,q,check_inverse=True) # [-3,-1, 0, 1] # 1x^3 + 0x^2 - 1x - 3    ## __genPolynomial(n,q,check_inverse=True)
+    g = __genPolynomial(n,q,check_inverse=True) # [ 1,-2, 1, 3] # 1x^3 + 1x^2 - 2x + 1    ## __genPolynomial(n,q,check_inverse=True)
 
-print "f:",f
-print "g:",g
+    print "f:",f
+    print "g:",g
 
-# Checking both f,g are invertible in Zp/<x^n+1> and Z2/<x^n+1>
-# Otherwise the following two lines would crash
-Rq(f)**-1 ; R2(f)**-1
-Rq(g)**-1 ; R2(g)**-1
-print "g & f are invertible"
+    # Checking both f,g are invertible in Zp/<x^n+1> and Z2/<x^n+1>
+    # Otherwise the following two lines would crash
+    Rq(f)**-1 ; R2(f)**-1
+    Rq(g)**-1 ; R2(g)**-1
+    print "g & f are invertible"
 
-g_inv = Rq(g)**-1
-g_inv = modCoeffs(g_inv,q).list()
+    g_inv = Rq(g)**-1
+    g_inv = modCoeffs(g_inv,q).list()
 
-h = R(f)*R(g_inv)
-h = h%(x**n+1)
-h = modCoeffs(h,q)
-print "h: ",h
-h = h.list()
-
-
-######################## Encapsulation #########################
-print "\nEncapsulation"
-
-#Randomly Generating r and e (with small norms)
-r = [ 1,-2, 0, 1] ## __genPolynomial(n,q,check_inverse=False)
-e = [ 2,-1,2, 1] ##__genPolynomial(n,q,check_inverse=False)
-print "r:",r
-print "e:",e
-
-t = R(h)*R(r)
-t = t%(x**n+1)
-t = modCoeffs(t,q)
-t = 2*t
-t = modCoeffs(t,q)
-
-print "t1:,",t
-
-t = t+R(e)
-t = modCoeffs(t,q)
-
-print "t:,",t
-
-t = t.list()
-
-k = R2(e).list()
+    h = R(f)*R(g_inv)
+    h = h%(x**n+1)
+    h = modCoeffs(h,q)
+    print "h: ",h
+    h = h.list()
 
 
-######################## Decapsulation ##########################
+    ######################## Encapsulation #########################
+    print "\nEncapsulation"
 
-k2 = R(g)*R(t)
-k2 = k2%(x**n+1)
-k2 = modCoeffs(k2,q)
+    #Randomly Generating r and e (with small norms)
+    r = __genPolynomial(n,q,check_inverse=False) # [ 1,-2, 0, 1] ## __genPolynomial(n,q,check_inverse=False)
+    e = __genPolynomial(n,q,check_inverse=False) #[ 2,-1,-1, 1] ##__genPolynomial(n,q,check_inverse=False)
+    print "r:",r
+    print "e:",e
 
-print "k''':",k2
+    t = R(h)*R(r)
+    t = t%(x**n+1)
+    t = modCoeffs(t,q)
+    t = 2*t
+    t = modCoeffs(t,q)
 
-k2 = modCoeffs(k2,2)
-print "k'':",k2
+    print "t1:,",t
 
-k2 = k2*R((R2(g)**-1).list())
-k2 = k2%(x**n+1)
+    t = t+R(e)
+    t = modCoeffs(t,q)
 
-print "k':",k2
-k2 = modCoeffs(k2,2)
+    print "t:,",t
 
-k2 = k2.list()
+    t = t.list()
 
-
-print "\nResults:----------\n"
-print "k: ", k
-print "k2: ", k2
-print "t: ", t
-print "t%2: ",R2(t).list()
-embed()
+    k = R2(e).list()
 
 
-####
-print "\n\n\n\n Testing"
-print "2fr+ge",Rq(2*R(f)*R(r)+R(g)*R(e))
-print "gt mod q",Rq(R(g)*R(t))
+    ######################## Decapsulation ##########################
+
+    k2 = R(g)*R(t)
+    k2 = k2%(x**n+1)
+    k2 = modCoeffs(k2,q)
+
+    print "k''':",k2
+
+    k2 = modCoeffs(k2,2)
+    print "k'':",k2
+
+    k2 = k2*R((R2(g)**-1).list())
+    k2 = k2%(x**n+1)
+
+    print "k':",k2
+    k2 = modCoeffs(k2,2)
+
+    k2 = k2.list()
+
+
+    print "\nResults:----------\n"
+    print "k: ", k
+    print "k2: ", k2
+    print "t: ", t
+    print "t%2: ",R2(t).list()
+
+
+
+    ####
+    print "\n\n\n\n Testing"
+    print "2fr+ge",Rq(2*R(f)*R(r)+R(g)*R(e))
+    print "gt mod q",Rq(R(g)*R(t))
+
+    print "Valid:",k == (k2 + [0]*(len(k)-len(k2)))
+    k2
+    print len(k),len(k2)
+
+
+
+
+
+kem(n,q)
