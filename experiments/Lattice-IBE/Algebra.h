@@ -13,6 +13,7 @@ ZZX FastReductionCoefficient(const ZZX& f, const ZZX& g, const ZZX& F, const ZZX
 mat_ZZ AnticircularMatrix(const ZZX& f);
 mat_ZZ BasisFromPolynomials(const ZZX& f, const ZZX& g, const ZZX& F, const ZZX& G);
 ZZ_pX Inverse(const ZZX& f);
+ZZ_pX Inverse2(const ZZX& f,int q);
 ZZ_pX Quotient(const ZZX& f, const ZZX& g);
 void GS_Norm(const ZZX fx, const ZZX gx, int& flag);
 void GenerateBasis(ZZX& f, ZZX& g, ZZX& F, ZZX& G, const ZZ& Norme);

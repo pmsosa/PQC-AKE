@@ -66,11 +66,9 @@ using namespace std;
 using namespace NTL;
 
 
-//My turn to play
+//////////////// DIGITAL SIGNATURE ////////////////
 
-
-
-void InitSystem(){
+void InitDS(){
 
     srand(rdtsc());                 //Seed Random
 
@@ -79,8 +77,6 @@ void InitSystem(){
     const ZZX phi = Cyclo();        //Phi - Used all over the place
     ZZ_pX phiq = conv<ZZ_pX>(phi);  
     ZZ_pXModulus PHI(phiq);
-
-
 }
 
 void SigKeyGen(ZZX Ks[2],ZZ_pX& Kv, MSK_Data* MSKD){
@@ -119,12 +115,7 @@ bool Verify(ZZX Kv,ZZX s[2], vec_ZZ msg, MSK_Data* MSKD){
     return true;
 }
 
-int main(){
-
-    srand(rdtsc());
-
-    
-
+void run_DS_example(){
 
     /// RUNNING THE KEYGEN ALGORITHM
         cout << "\n---Keygen---\n";
@@ -190,6 +181,7 @@ int main(){
         //2. We will pretend that s[0] is empty since we didn't get that info
         bool valid = Verify(conv<ZZX>(Kv),s, msg, MSKD);
 
+        //PRINTIN DEBUG INFO
         cout << "     derived s1: ";
         for (int i=0; i < N0; i++){
             cout << s[0][i] << ",";
@@ -198,9 +190,79 @@ int main(){
 
         cout << "          Valid: " << valid <<"(not yet implemented) \n" ;
 
-        //PRINTIN DEBUG INFO
+    return;
+}
 
 
+/////////// Key Encapsulation Mechanism ///////////
+void KEMKeyGen(ZZX& Kd, ZZX& Ke){
+    
+    ZZ small_norm = conv<ZZ>(30);
+
+    bool valid = false;
+    while (!valid){
+
+        try{
+            //Build f & g        
+            ZZX f = RandomPolyFixedSqNorm(small_norm,N0-1);
+            ZZX g = RandomPolyFixedSqNorm(small_norm,N0-1);
+            Kd = g;
+            
+
+            //Check that f is invertible in both Zq[x]/<x^n+1> and Z2[x]/<x^n+1>
+            ZZX f_inv = conv<ZZX>(Inverse2(conv<ZZX>(f),q0));
+            ZZX f_inv2 = conv<ZZX>(Inverse2(conv<ZZX>(f),2));
+
+            //Check that g is invertible in both Zq[x]/<x^n+1> and Z2[x]/<x^n+1>
+            ZZX g_inv = conv<ZZX>(Inverse2(conv<ZZX>(g),q0));
+            ZZX g_inv2 = conv<ZZX>(Inverse2(conv<ZZX>(g),2));
+
+
+            //Debuggin' Information
+            cout << "f: "<< f << " ("<<deg(f)<<")"<<"\n";
+            cout << "g: "<< g << " ("<<deg(g)<<")"<<"\n";
+
+            cout << "f^-1: "<< f_inv << " ("<<deg(f_inv)<<")"<<"\n";
+            cout << "f^-1 (2): "<< f_inv2 << " ("<<deg(f_inv2)<<")"<<"\n";
+
+            cout << "g^-1: "<< g_inv << " ("<<deg(g_inv)<<")"<<"\n";
+            cout << "g^-1 (2): "<< g_inv2 << " ("<<deg(g_inv2)<<")"<<"\n";
+            valid = true;
+
+            Ke = (f*g_inv);
+            
+        }
+        catch (int e){
+            cout << "Caught!\n";
+            //Do nothing!
+        }
+    }
+
+
+
+    return;
+}
+
+
+void Encapsulate(){
+    return;
+}
+
+void Decapsulate(){
+    return;
+}
+
+int main(){
+
+    srand(rdtsc());
+
+    //Test the DS
+    //run_DS_example();
+
+    //Test the KEM
+    ZZX Kd,Ke;
+    KEMKeyGen(Kd,Ke);
+    cout << Kd << " | " << Ke << "\n";
 
 
     return 0;

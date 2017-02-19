@@ -255,6 +255,73 @@ ZZ_pX Inverse(const ZZX& f)
     return ( Res_f_1 * conv<ZZ_pX>(rho_f) );
 }
 
+//==============================================================================
+//Computes the Inverse of f (mod phi) (mod q)
+//==============================================================================
+ZZ_pX Inverse2(const ZZX& f,int q)
+{
+
+
+
+    // ZZ_p::init(conv<ZZ>(2));
+    // ZZX rho_f, iphi;
+    // ZZ Res_f;
+    // ZZ_p Res_f_1;
+    // XGCD(Res_f, rho_f, iphi, f, phi, 0);    
+    // inv(Res_f_1, conv<ZZ_p>(Res_f));
+    // assert(Res_f_1*conv<ZZ_p>(Res_f) == 1);
+
+    // return ( Res_f_1 * conv<ZZ_pX>(rho_f) );
+
+    //ZZ_pContext context;
+    //context.save(); 
+
+
+    ZZ_p::init(conv<ZZ>(q));
+    ZZ_pXModulus F(conv<ZZ_pX>(phi));
+    ZZ_pX fp = conv<ZZ_pX>(f);
+    ZZ_pX x;
+
+    //InvMod(x, fp, F);
+    int r = InvModStatus(x,fp,F);
+    if (r != 0){ throw -1;}
+    //cout << r;
+    // if (r == 0){
+    //     cout << "D:"<<deg(x)<<"\n";
+    //     for (int i = deg(x)+1; i < N0; i++){
+    //         cout << "changed" << i;
+    //         int a;
+    //         cin >> a;
+    //         SetCoeff(x,i,0);
+    //     }
+    // cout << x;
+    // }
+    // else {
+    //     cout << "No valid Inverse";
+    // }
+    // cout << fp*x << deg(fp*x);
+    return x;
+
+
+    // ZZX rho_f, iphi;
+    // ZZ Res_f;
+    // ZZ_p Res_f_1;
+    // XGCD(Res_f, rho_f, iphi, f, phi, 0); 
+
+    //   void XGCD(ZZ& d, ZZ& s, ZZ& t, const ZZ& a, const ZZ& b);
+    //  d = gcd(a, b) = a*s + b*t.
+
+    //  Res_f = gcd(phi,0) = phi + 
+
+
+    // inv(Res_f_1, conv<ZZ_p>(Res_f));
+    // assert(Res_f_1*conv<ZZ_p>(Res_f) == 1);
+
+    //context.restore();
+
+    //return ( Res_f_1 * conv<ZZ_pX>(rho_f) );
+}
+
 
 //==============================================================================
 //Computes h = g/f (mod phi) (mod q)
