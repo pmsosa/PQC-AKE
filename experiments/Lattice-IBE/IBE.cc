@@ -197,10 +197,24 @@ void run_DS_example(){
 
 
 /////////// Key Encapsulation Mechanism ///////////
+
+
+//Move this one somewhere else//
+void modCoeffs(ZZX& f, ZZ p){
+    ZZ pp = p/2;
+    for (int i=0;i <= deg(f);i++){
+        ZZ temp = f[i]%p;
+        if (temp>pp){ temp = temp - p;}
+
+        SetCoeff(f,i,temp);
+    }
+}
+
 void KEMKeyGen(ZZX& Kd, ZZX& Ke){
     
 
     bool valid = false;
+    int retries = 0;
     while (!valid){
 
         try{
@@ -221,6 +235,7 @@ void KEMKeyGen(ZZX& Kd, ZZX& Ke){
 
             //Debuggin' Information
             cout << "\n\nKEM - Keygen\n";
+            cout << "retries:" << retries << "\n";
             cout << "f: "<< f << " ("<<deg(f)<<")"<<"\n";
             cout << "g: "<< g << " ("<<deg(g)<<")"<<"\n";
 
@@ -234,11 +249,13 @@ void KEMKeyGen(ZZX& Kd, ZZX& Ke){
 
             Kd = g;
             Ke = (f*g_inv)%phi;
+            //cout << "!"<<Ke<<"!";
+            modCoeffs(Ke,q1);
             
         }
         catch (int e){
-            cout << "Caught!\n";
-            //Do nothing!
+            retries += 1;
+            //Keep going!
         }
     }
 
@@ -246,14 +263,16 @@ void KEMKeyGen(ZZX& Kd, ZZX& Ke){
 }
 
 
-void Encapsulate(ZZX& Kd, ZZX& c, ZZX& k){
+void Encapsulate(ZZX& Ke, ZZX& c, ZZX& k){
 
     ZZ_p::init(conv<ZZ>(q0));
 
     ZZX r = RandomPolyFixedSqNorm(kem_norm,N0-1);
     ZZX e = RandomPolyFixedSqNorm(kem_norm,N0-1);
 
-    c = conv<ZZX>(conv<ZZ_pX>(2*Kd*r+e))%phi;
+    c = conv<ZZX>((2*conv<ZZ_pX>(Ke)*conv<ZZ_pX>(r))+conv<ZZ_pX>(e))%phi;
+
+    modCoeffs(c,q1);
 
     ZZ_p::init(conv<ZZ>(2));
     k = conv<ZZX>(conv<ZZ_pX>(e));
@@ -274,12 +293,43 @@ void Decapsulate(ZZX& Kd, ZZX& c, ZZX& k){
     ZZ_p::init(conv<ZZ>(q0));
 
     k = conv<ZZX>(conv<ZZ_pX>(Kd*c))%phi;
+    modCoeffs(k,q1);
 
-    cout << k;
+    //cout << k;
 
-    ZZ_p::init(conv<ZZ>(2));
+    //ZZ_p::init(conv<ZZ>(2));
 
-    k = conv<ZZX>(conv<ZZ_pX>(k)/conv<ZZ_pX>(Kd));
+    ZZX Kd_inv = conv<ZZX>(Inverse2(conv<ZZX>(Kd),2));
+    modCoeffs(k,conv<ZZ>(2));
+    //This can also be done by conv k to ZZ_pX
+    
+    //cout << "!!"<<k<<"!!\n";
+    
+    k = (k*Kd_inv)%phi;//conv<ZZX>(conv<ZZ_pX>(k)/conv<ZZ_pX>(Kd));
+    modCoeffs(k,conv<ZZ>(2));
+
+    return;
+}
+
+
+void run_KEM_example(){
+
+    ZZX Kd,Ke;
+    KEMKeyGen(Kd,Ke);
+    cout << "\nKd: " << Kd << " | Ke:" << Ke << "\n";
+
+    ZZX c,k;
+    Encapsulate(Ke,c,k);
+    cout << "\nc: " << c << " | k:" << k << "\n";
+
+
+    ZZX k2;
+    Decapsulate(Kd,c,k2);
+    cout << "\nk':" << k2 << "\n";
+
+    bool valid = (k2 == k);
+    cout << "VALID (k'==k): "<<valid << "\n";
+
 
     return;
 }
@@ -289,21 +339,11 @@ int main(){
     srand(rdtsc());
 
     //Test the DS
-    //run_DS_example();
+    run_DS_example();
 
     //Test the KEM
-    ZZX Kd,Ke;
-    KEMKeyGen(Kd,Ke);
-    cout << "\nKd: " << Kd << " | Ke:" << Ke << "\n";
+    run_KEM_example();
 
-    ZZX c,k;
-    Encapsulate(Kd,c,k);
-    cout << "\nc: " << c << " | k:" << k << "\n";
-
-
-    ZZX k2;
-    Decapsulate(Kd,c,k2);
-    cout << "\n K':" << k2 << "\n";
 
     return 0;
 }

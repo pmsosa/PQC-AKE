@@ -43,15 +43,13 @@ def __genPolynomial(n,q,check_inverse=False):
 # Reduction a modulo q that maps coeffs: [-(q-1)/2 , -(q-1)/2]
 def modCoeffs(f,pp):
     clist=f.list()
-    p2=int(pp/_sage_const_2 )
+    p2=int(pp/2)
     for i in range(len(clist)):
         clist[i] = int(clist[i])%pp
         #print clist[i],p2,clist[i]>p2,int(clist[i])-pp,type(clist[i]),clist[i]*-1
         if clist[i]>p2:
             clist[i]= int(clist[i]) - pp
             #print clist[i]
-
-
     return R(clist)
 
 
