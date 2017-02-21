@@ -23,6 +23,9 @@ const ZZX phi = Cyclo();
 const ZZ kem_norm = conv<ZZ>(30); //Move this to params
 
 
+const bool dtime = true;  //Print Timing info?
+const bool debug = true; //Print Debug info?
+
 void modCoeffs(ZZX& f, ZZ p){
     ZZ pp = p/2;
     for (int i=0;i <= deg(f);i++){
@@ -57,16 +60,18 @@ void KEMKeyGen(ZZX& Kd, ZZX& Ke){
 
 
             //Debuggin' Information
-            cout << "\n\nKEM - Keygen\n";
-            cout << "retries:" << retries << "\n";
-            cout << "f: "<< f << " ("<<deg(f)<<")"<<"\n";
-            cout << "g: "<< g << " ("<<deg(g)<<")"<<"\n";
+            if (debug){
+                cout << "\n\nKEM - Keygen\n";
+                cout << "retries:" << retries << "\n";
+                cout << "f: "<< f << " ("<<deg(f)<<")"<<"\n";
+                cout << "g: "<< g << " ("<<deg(g)<<")"<<"\n";
 
-            cout << "f^-1: "<< f_inv << " ("<<deg(f_inv)<<")"<<"\n";
-            cout << "f^-1 (2): "<< f_inv2 << " ("<<deg(f_inv2)<<")"<<"\n";
+                cout << "f^-1: "<< f_inv << " ("<<deg(f_inv)<<")"<<"\n";
+                cout << "f^-1 (2): "<< f_inv2 << " ("<<deg(f_inv2)<<")"<<"\n";
 
-            cout << "g^-1: "<< g_inv << " ("<<deg(g_inv)<<")"<<"\n";
-            cout << "g^-1 (2): "<< g_inv2 << " ("<<deg(g_inv2)<<")"<<"\n";
+                cout << "g^-1: "<< g_inv << " ("<<deg(g_inv)<<")"<<"\n";
+                cout << "g^-1 (2): "<< g_inv2 << " ("<<deg(g_inv2)<<")"<<"\n";
+            }
             valid = true;
 
 
@@ -101,13 +106,14 @@ void Encapsulate(ZZX& Ke, ZZX& c, ZZX& k){
     k = conv<ZZX>(conv<ZZ_pX>(e));
 
     //Debuggin' Information
-    cout << "\n\nKEM - Enc\n";
-    cout << "r: " << r << "\n";
-    cout << "e: " << e << "\n"; 
+    if (debug){
+        cout << "\n\nKEM - Enc\n";
+        cout << "r: " << r << "\n";
+        cout << "e: " << e << "\n"; 
 
-    cout << "c: " << c << "\n";
-    cout << "k: " << k << "\n"; 
-
+        cout << "c: " << c << "\n";
+        cout << "k: " << k << "\n"; 
+    }
     return;
 }
 
@@ -137,22 +143,51 @@ void Decapsulate(ZZX& Kd, ZZX& c, ZZX& k){
 
 void run_KEM_example(){
 
+    clock_t t1, t2;
+    float t_keygen, t_enc, t_dec;
+
     ZZX Kd,Ke;
+    
+    t1 = clock();
     KEMKeyGen(Kd,Ke);
+    t2 = clock();
+    t_keygen = ((float)t2 - (float)t1)/1000000.0F;
+ 
     cout << "\nKd: " << Kd << " | Ke:" << Ke << "\n";
 
+    t1 = clock();
     ZZX c,k;
     Encapsulate(Ke,c,k);
+    t2 = clock();
+    t_enc = ((float)t2 - (float)t1)/1000000.0F;
     cout << "\nc: " << c << " | k:" << k << "\n";
 
-
+    t1 = clock();
     ZZX k2;
     Decapsulate(Kd,c,k2);
+    t2 = clock();
+    t_dec = ((float)t2 - (float)t1)/1000000.0F;
     cout << "\nk':" << k2 << "\n";
 
     bool valid = (k2 == k);
     cout << "VALID (k'==k): "<<valid << "\n";
 
+    if (dtime){
+        cout << "\nTiming\n"
+        cout << "KEMKeyGen: " << t_keygen << "\n";
+        cout << "KEMEnc   : " << t_enc << "\n";
+        cout << "KEMDec   : " << t_dec << "\n";
+    }
+
 
     return;
 }
+
+
+// clock_t t1, t2;
+// t1 = clock();
+//     t2 = clock();
+//     diff = ((float)t2 - (float)t1)/1000000.0F;
+//     cout << "\n\nIt took " << diff << " seconds to extract " << nb_extr << " keys." << endl;
+//     cout << "That's " << (diff/nb_extr)*1000 << " milliseconds per key." << endl << endl;
+// }
