@@ -3,7 +3,7 @@ CC=g++
 AR=ar
 
 # Case 1: These are the standard compilation flags CCFLAGS and linker flags LDFLAGS.
-CCFLAGS= -Wall -std=gnu++0x -Ofast 
+CCFLAGS= -Wall -std=gnu++0x -Ofast
 LDFLAGS= -lntl -lgmp 
 
 # Case 2: If NTL is installed in a specific location, say /path/to/ntl, you must specify it by using the CCFLAGS and LDFLAGS below instead.
@@ -19,10 +19,10 @@ OBJS=$(SRCS:.cc=.o)
 
 .PHONY: all clean mrproper
 
-all: IBE
+all: AEK
 
-IBE: $(OBJS)
-	$(CC) $(CCFLAGS) -o IBE $(OBJS) $(LDFLAGS)
+AEK: $(OBJS)
+	$(CC) $(CCFLAGS) -o AEK $(OBJS) $(LDFLAGS)
 
 %.o: %.cc params.h
 	$(CC) $(CCFLAGS) -c $< 
@@ -31,4 +31,4 @@ clean:
 	rm -f *.o
 
 mrproper:
-	rm -f IBE
+	rm -f AEK
