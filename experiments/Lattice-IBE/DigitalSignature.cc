@@ -20,6 +20,10 @@ using namespace NTL;
 
 const ZZX phi = Cyclo();
 
+
+const bool dtime = true;  //Print Timing info?
+const bool debug = true; //Print Debug info?
+
 ///DIGITAL SIGNATURE - Pedro M. Sosa///
 
 // void InitDS(){
@@ -71,78 +75,116 @@ bool Verify(ZZX Kv,ZZX s[2], vec_ZZ msg){
 
 void run_DS_example(){
 
+
+    clock_t t1, t2;
+    float t_keygen, t_sig, t_ver;
+
     /// RUNNING THE KEYGEN ALGORITHM
-        cout << "\n---Keygen---\n";
+        
         ZZX Ks[2];
         ZZ_pX Kv;
         MSK_Data * MSKD = new MSK_Data;
+
+        t1 = clock();
         SigKeyGen(Ks,Kv,MSKD);
+        t2 = clock();
+        t_keygen = ((float)t2 - (float)t1)/1000000.0F;
         //ZZX Kv2 = conv<ZZX>(Kv);
 
-        //PRINTIN DEBUG INFO 
-        cout << " Private:\n";
-        cout << "    denom: ";
-        for( int i = 0; i< N0;i++){
-            cout << Ks[0][i] << ",";
+        //PRINTIN DEBUG INFO
+        if (debug){
+            cout << "\n---Keygen---\n";
+            cout << " Private:\n";
+            cout << "    denom: ";
+            for( int i = 0; i< N0;i++){
+                cout << Ks[0][i] << ",";
+            }
+            cout <<"\n";
+
+            cout <<"      nom: ";
+            for (int i = 0; i< N0;i++){
+                cout << Ks[1][i] << ",";
+            }
+            cout <<"\n";
+
+            cout << "\n Public:\n";
+
+            cout << "        h: ";
+            for(int i = 0; i < N0;i++){
+                cout << Kv[i] << ","; //"( "<< Kv2[i] <<" ) " << ",";
+            }
+            cout <<"\n";
         }
-        cout <<"\n";
-
-        cout <<"      nom: ";
-        for (int i = 0; i< N0;i++){
-            cout << Ks[1][i] << ",";
-        }
-        cout <<"\n";
-
-        cout << "\n Public:\n";
-
-        cout << "        h: ";
-        for(int i = 0; i < N0;i++){
-            cout << Kv[i] << ","; //"( "<< Kv2[i] <<" ) " << ",";
-        }
-        cout <<"\n";
-
     /// RUNNING THE SIGN ALGORITHM
-        cout << "\n---Sign---\n";
 
         vec_ZZ msg = RandomVector();
         ZZX s[2];
+        t1 = clock();
         Sign(s,msg,MSKD);
+        t2 = clock();
+        t_sig = ((float)t2 - (float)t1)/1000000.0F;
 
         //PRINTIN DEBUG INFO
-        cout << "\n (rand) message: ";
-        for(int i = 0; i < N0;i++){
-            cout << msg[i] << ",";
-        }
-        cout <<"\n";
+        if (debug){
+            cout << "\n---Sign---\n";
+            cout << "\n (rand) message: ";
+            for(int i = 0; i < N0;i++){
+                cout << msg[i] << ",";
+            }
+            cout <<"\n";
 
-        cout << "             s1: ";
-        for(int i = 0; i < N0;i++){
-            cout << s[0][i] << ",";
-        }
-        cout <<"\n";
+            cout << "             s1: ";
+            for(int i = 0; i < N0;i++){
+                cout << s[0][i] << ",";
+            }
+            cout <<"\n";
 
-        cout << "     (debug) s2: ";
-        for(int i = 0; i < N0;i++){
-            cout << s[1][i] << ",";
+            cout << "     (debug) s2: ";
+            for(int i = 0; i < N0;i++){
+                cout << s[1][i] << ",";
+            }
+            cout <<"\n";
         }
-        cout <<"\n";
 
     /// RUNNING THE VERIFY ALGORITHM
-        cout << "\n--Verify---\n";
+        
 
         //Notice
         //1. Turn Kv into ZZX(Kv)
         //2. We will pretend that s[0] is empty since we didn't get that info
+        t1 = clock();
         bool valid = Verify(conv<ZZX>(Kv),s, msg);
+        t2 = clock();
+        t_ver = ((float)t2 - (float)t1)/1000000.0F;
+
+
+        //Not Certain of this part.
+        // double norm1 = 0;
+        // double norm2 = 0;
+        // for(int i=0; i < deg(s[0]);i++){
+        //     norm1 += conv<double>(s[0][i]*s[0][i]);
+        //     norm2 += conv<double>(s[1][i]*s[1][i]);
+        // }
+        // cout << sqrt(norm1) << " | " << sqrt(norm2) << " | " << conv<ZZ>(1.36*q0/2);
 
         //PRINTIN DEBUG INFO
-        cout << "     derived s1: ";
-        for (int i=0; i < N0; i++){
-            cout << s[0][i] << ",";
-        }
-        cout <<"\n";
+        if (debug){
+            cout << "\n--Verify---\n";
+            cout << "     derived s1: ";
+            for (int i=0; i < N0; i++){
+                cout << s[0][i] << ",";
+            }
+            cout <<"\n";
 
-        cout << "          Valid: " << valid <<"(not yet implemented) \n" ;
+            cout << "          Valid: " << valid <<"(not yet implemented) \n" ;
+        }
+
+    if (dtime){
+        cout << "\nTiming\n";
+        cout << "KEMKeyGen: " << t_keygen << "\n";
+        cout << "KEMEnc   : " << t_sig << "\n";
+        cout << "KEMDec   : " << t_ver << "\n";
+    }
 
     return;
 }

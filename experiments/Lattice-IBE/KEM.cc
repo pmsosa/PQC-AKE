@@ -173,7 +173,7 @@ void run_KEM_example(){
     cout << "VALID (k'==k): "<<valid << "\n";
 
     if (dtime){
-        cout << "\nTiming\n"
+        cout << "\nTiming\n";
         cout << "KEMKeyGen: " << t_keygen << "\n";
         cout << "KEMEnc   : " << t_enc << "\n";
         cout << "KEMDec   : " << t_dec << "\n";
