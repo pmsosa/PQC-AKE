@@ -60,6 +60,7 @@ void SigKeyGen(ZZX Ks[2],ZZ_pX& Kv, MSK_Data* MSKD){
 }
 
 void Sign(ZZX s[2],vec_ZZ msg, MSK_Data* MSKD){
+    //TODO: HASH FUNCTION
     IBE_Extract(s, msg, MSKD);
     return;
 }
@@ -70,7 +71,18 @@ bool Verify(ZZX Kv,ZZX s[2], vec_ZZ msg){
     ZZ_pX aux = conv<ZZ_pX>((conv<ZZX>(msg) - (s[1]*Kv))%phi);
 
     s[0] = conv<ZZX>(aux);
-    return true;
+
+    double norm1 = 0;
+    double norm2 = 0;
+    double norm3 = 0;
+    for(int i=0; i < deg(s[0]);i++){
+        norm1 += conv<double>(s[0][i]*s[0][i]);
+        norm2 += conv<double>(s[1][i]*s[1][i]);
+    }
+    norm1 = sqrt(norm1);
+    norm2 = sqrt(norm2);
+    norm3 = sqrt(norm1*norm1+norm2*norm2);
+    return (norm3 < conv<ZZ>(1.36*q0/2*sqrt(2*N0)));
 }
 
 void run_DS_example(){
@@ -161,11 +173,15 @@ void run_DS_example(){
         //Not Certain of this part.
         // double norm1 = 0;
         // double norm2 = 0;
+        // double norm3 = 0;
         // for(int i=0; i < deg(s[0]);i++){
         //     norm1 += conv<double>(s[0][i]*s[0][i]);
         //     norm2 += conv<double>(s[1][i]*s[1][i]);
         // }
-        // cout << sqrt(norm1) << " | " << sqrt(norm2) << " | " << conv<ZZ>(1.36*q0/2);
+        // norm1 = sqrt(norm1);
+        // norm2 = sqrt(norm2);
+        // norm3 = sqrt(norm1*norm1+norm2*norm2);
+        // cout << norm3 << " | " << conv<ZZ>(1.36*q0/2*sqrt(2*N0));
 
         //PRINTIN DEBUG INFO
         if (debug){
@@ -176,7 +192,7 @@ void run_DS_example(){
             }
             cout <<"\n";
 
-            cout << "          Valid: " << valid <<"(not yet implemented) \n" ;
+            cout << "          Valid: " << valid <<"\n" ;
         }
 
     if (dtime){
