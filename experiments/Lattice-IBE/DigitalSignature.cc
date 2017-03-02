@@ -7,6 +7,7 @@
 #include <NTL/ZZX.h>
 #include <NTL/mat_ZZ.h>
 #include <gmp.h>
+#include <openssl/sha.h>
 
 #include "Sampling.h"
 #include "params.h"
@@ -59,16 +60,22 @@ void SigKeyGen(ZZX Ks[2],ZZ_pX& Kv, MSK_Data* MSKD){
     return;
 }
 
-void Sign(ZZX s[2],vec_ZZ msg, MSK_Data* MSKD){
-    //TODO: HASH FUNCTION
-    IBE_Extract(s, msg, MSKD);
+void Sign(ZZX s[2],vec_ZZ& msg, vec_ZZ& r, MSK_Data* MSKD){
+    //Hash Function
+    r = RandomVector();
+    vec_ZZ hashed;
+    Hash(hashed, r, msg);
+    IBE_Extract(s, hashed, MSKD);
+
     return;
 }
 
-bool Verify(ZZX Kv,ZZX s[2], vec_ZZ msg){
+bool Verify(ZZX Kv,ZZX s[2], vec_ZZ& msg, vec_ZZ& r){
     //Hash id
     const ZZX phi = Cyclo();
-    ZZ_pX aux = conv<ZZ_pX>((conv<ZZX>(msg) - (s[1]*Kv))%phi);
+    vec_ZZ hashed = vec_ZZ();
+    Hash(hashed, r, msg);
+    ZZ_pX aux = conv<ZZ_pX>((conv<ZZX>(hashed) - (s[1]*Kv))%phi);
 
     s[0] = conv<ZZX>(aux);
 
@@ -82,7 +89,37 @@ bool Verify(ZZX Kv,ZZX s[2], vec_ZZ msg){
     norm1 = sqrt(norm1);
     norm2 = sqrt(norm2);
     norm3 = sqrt(norm1*norm1+norm2*norm2);
+    if (debug){
+        cout << norm3 << " |" << conv<ZZ>(1.36*q0/2*sqrt(2*N0));
+    }
     return (norm3 < conv<ZZ>(1.36*q0/2*sqrt(2*N0)));
+}
+
+void Hash(vec_ZZ&  hashed, vec_ZZ& r, vec_ZZ& msg){
+    SHA256_CTX ctx;
+    unsigned char digest[SHA256_DIGEST_LENGTH];
+    SHA256_Init(&ctx);
+
+    //vec_ZZ msg = RandomVector();
+    hashed = msg+r;
+
+    if (debug){
+        cout << "msg:" << msg << "\n";
+        cout << "  r:" << r << "\n";
+        cout << "m+r:" << hashed << "\n";
+    }
+    for(int i = 0; i < N0; i++) {
+        char f = (conv<int>(hashed[i])%255);
+        SHA256_Update(&ctx, &f, 1);
+    }
+    SHA256_Final(digest, &ctx);
+
+    for(int i=0; i < SHA256_DIGEST_LENGTH and i < N0; i++){
+        //cout << int(digest[i]) << " ";
+        hashed[i] = conv<ZZ>(digest[i])%q0;
+    }
+    cout << "Hashed: " << hashed << "\n";
+
 }
 
 void run_DS_example(){
@@ -128,11 +165,11 @@ void run_DS_example(){
             cout <<"\n";
         }
     /// RUNNING THE SIGN ALGORITHM
-
+        vec_ZZ r;
         vec_ZZ msg = RandomVector();
         ZZX s[2];
         t1 = clock();
-        Sign(s,msg,MSKD);
+        Sign(s,msg,r,MSKD);
         t2 = clock();
         t_sig = ((float)t2 - (float)t1)/1000000.0F;
 
@@ -165,7 +202,7 @@ void run_DS_example(){
         //1. Turn Kv into ZZX(Kv)
         //2. We will pretend that s[0] is empty since we didn't get that info
         t1 = clock();
-        bool valid = Verify(conv<ZZX>(Kv),s, msg);
+        bool valid = Verify(conv<ZZX>(Kv),s, msg,r);
         t2 = clock();
         t_ver = ((float)t2 - (float)t1)/1000000.0F;
 

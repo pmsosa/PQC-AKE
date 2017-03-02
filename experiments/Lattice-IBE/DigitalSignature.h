@@ -9,8 +9,9 @@
 
 
 void SigKeyGen(ZZX Ks[2],ZZ_pX& Kv, MSK_Data* MSKD);
-void Sign(ZZX s[2],vec_ZZ msg, MSK_Data* MSKD);
-bool Verify(ZZX Kv,ZZX s[2], vec_ZZ msg);
+void Sign(ZZX s[2],vec_ZZ& msg, vec_ZZ& r, MSK_Data* MSKD);
+bool Verify(ZZX& Kv,ZZX s[2], vec_ZZ& msg, vec_ZZ& r);
+void Hash(vec_ZZ&  hashed, vec_ZZ& r, vec_ZZ& msg);
 void run_DS_example();
 
 
