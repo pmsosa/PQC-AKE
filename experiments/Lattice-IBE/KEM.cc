@@ -26,15 +26,7 @@ const ZZ kem_norm = conv<ZZ>(30); //Move this to params
 const bool dtime = true;  //Print Timing info?
 const bool debug = true; //Print Debug info?
 
-void modCoeffs(ZZX& f, ZZ p){
-    ZZ pp = p/2;
-    for (int i=0;i <= deg(f);i++){
-        ZZ temp = f[i]%p;
-        if (temp>pp){ temp = temp - p;}
 
-        SetCoeff(f,i,temp);
-    }
-}
 
 void KEMKeyGen(ZZX& Kd, ZZX& Ke){
     

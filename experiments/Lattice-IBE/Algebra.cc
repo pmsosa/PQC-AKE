@@ -34,6 +34,16 @@ ZZX Cyclo()
 const ZZX phi = Cyclo();
 
 
+void modCoeffs(ZZX& f, ZZ p){
+    ZZ pp = p/2;
+    for (int i=0;i <= deg(f);i++){
+        ZZ temp = f[i]%p;
+        if (temp>pp){ temp = temp - p;}
+
+        SetCoeff(f,i,temp);
+    }
+}
+
 //==============================================================================
 //Computes the squared norm of a polynomial f   
 //==============================================================================

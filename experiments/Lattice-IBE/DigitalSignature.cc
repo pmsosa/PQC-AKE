@@ -27,17 +27,6 @@ const bool debug = true; //Print Debug info?
 
 ///DIGITAL SIGNATURE - Pedro M. Sosa///
 
-// void InitDS(){
-
-//     srand(rdtsc());                 //Seed Random
-
-//     ZZ_p::init(q1);                 //q1 = ZZ(q0)
-
-//     const ZZX phi = Cyclo();        //Phi - Used all over the place
-//     ZZ_pX phiq = conv<ZZ_pX>(phi);  
-//     ZZ_pXModulus PHI(phiq);
-// }
-
 void SigKeyGen(ZZX Ks[2],ZZ_pX& Kv, MSK_Data* MSKD){
 
     
@@ -78,6 +67,7 @@ bool Verify(ZZX Kv,ZZX s[2], vec_ZZ& msg, vec_ZZ& r){
     ZZ_pX aux = conv<ZZ_pX>((conv<ZZX>(hashed) - (s[1]*Kv))%phi);
 
     s[0] = conv<ZZX>(aux);
+    modCoeffs(s[0],q1);
 
     double norm1 = 0;
     double norm2 = 0;
@@ -90,9 +80,9 @@ bool Verify(ZZX Kv,ZZX s[2], vec_ZZ& msg, vec_ZZ& r){
     norm2 = sqrt(norm2);
     norm3 = sqrt(norm1*norm1+norm2*norm2);
     if (debug){
-        cout << norm3 << " |" << conv<ZZ>(1.36*q0/2*sqrt(2*N0));
+        cout << norm3 << " |" << conv<ZZ>(1.17*sqrt(q0/2*N0)*sqrt(2*N0));
     }
-    return (norm3 < conv<ZZ>(1.36*q0/2*sqrt(2*N0)));
+    return (norm3 < conv<ZZ>(1.17*sqrt(q0/2*N0)*sqrt(2*N0)));//conv<ZZ>(1.36*q0/2*sqrt(2*N0)));
 }
 
 void Hash(vec_ZZ&  hashed, vec_ZZ& r, vec_ZZ& msg){

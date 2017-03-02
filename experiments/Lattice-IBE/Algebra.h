@@ -22,4 +22,6 @@ void Rotate(RR_t * const dest, RR_t const * const src);
 void ClassicMGS(RR_t Bstar[2*N0][2*N0], const RR_t B[2*N0][2*N0]);
 void FastMGS(RR_t Bst[2*N0][2*N0], const RR_t B[2*N0][2*N0]);
 
+void modCoeffs(ZZX& f, ZZ p);
+
 #endif

@@ -8,7 +8,7 @@
 #include "KEM.h"
 
 
-void modCoeffs(ZZX& f, ZZ p);
+//void modCoeffs(ZZX& f, ZZ p);
 void KEMKeyGen(ZZX& Kd, ZZX& Ke);
 void Encapsulate(ZZX& Ke, ZZX& c, ZZX& k);
 void Decapsulate(ZZX& Kd, ZZX& c, ZZX& k);
