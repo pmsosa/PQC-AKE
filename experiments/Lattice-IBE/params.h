@@ -18,8 +18,9 @@ using std::complex;
 // N0 is the degree of the polynomial ring used. N0 must be a power of 2!
 // q0 is the modulus w.r.t. whom the integers are reduced. We suggest to take q0 prime
 //=====================================================================================
-#define N0 4
+#define N0 512
 #define q0 (12889)
+#define KEM_NORM 93
 //======================================================================================
 
 

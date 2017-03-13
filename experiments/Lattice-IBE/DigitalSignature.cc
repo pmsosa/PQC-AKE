@@ -22,8 +22,8 @@ using namespace NTL;
 const ZZX phi = Cyclo();
 
 
-const bool dtime = true;  //Print Timing info?
-const bool debug = true; //Print Debug info?
+const bool dtime = false;  //Print Timing info?
+const bool debug = false; //Print Debug info?
 
 ///DIGITAL SIGNATURE - Pedro M. Sosa///
 
@@ -91,25 +91,33 @@ void Hash(vec_ZZ&  hashed, vec_ZZ& r, vec_ZZ& msg){
     SHA256_Init(&ctx);
 
     //vec_ZZ msg = RandomVector();
-    hashed = msg+r;
+    hashed = msg;
 
-    if (debug){
-        cout << "msg:" << msg << "\n";
-        cout << "  r:" << r << "\n";
-        cout << "m+r:" << hashed << "\n";
-    }
-    for(int i = 0; i < N0; i++) {
-        char f = (conv<int>(hashed[i])%255);
+    // if (debug){
+    //     cout << "msg:" << msg << "\n";
+    //     cout << "  r:" << r << "\n";
+    //     cout << "m+r:" << hashed << "\n";
+    // }
+
+    for(int i = 0; i < msg.length(); i++) {
+        char f = (conv<int>(msg[i])%255);
         SHA256_Update(&ctx, &f, 1);
     }
+    for(int i = 0; i < r.length(); i++) {
+        char f = (conv<int>(r[i])%255);
+        SHA256_Update(&ctx, &f, 1);
+    }
+
     SHA256_Final(digest, &ctx);
+
 
     for(int i=0; i < SHA256_DIGEST_LENGTH and i < N0; i++){
         //cout << int(digest[i]) << " ";
         hashed[i] = conv<ZZ>(digest[i])%q0;
     }
-    cout << "Hashed: " << hashed << "\n";
-
+    if (debug){
+        cout << "Hashed: " << hashed << "\n";
+    }
 }
 
 void run_DS_example(){
@@ -224,9 +232,9 @@ void run_DS_example(){
 
     if (dtime){
         cout << "\nTiming\n";
-        cout << "KEMKeyGen: " << t_keygen << "\n";
-        cout << "KEMEnc   : " << t_sig << "\n";
-        cout << "KEMDec   : " << t_ver << "\n";
+        cout << "DSKeyGen : " << t_keygen << "\n";
+        cout << "DSSign   : " << t_sig << "\n";
+        cout << "DSVerif  : " << t_ver << "\n";
     }
 
     return;

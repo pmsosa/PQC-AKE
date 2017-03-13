@@ -20,11 +20,11 @@ using namespace std;
 using namespace NTL;
 
 const ZZX phi = Cyclo();
-const ZZ kem_norm = conv<ZZ>(30); //Move this to params
+const ZZ kem_norm = conv<ZZ>(KEM_NORM); //Move this to params
 
 
-const bool dtime = true;  //Print Timing info?
-const bool debug = true; //Print Debug info?
+const bool dtime = false;  //Print Timing info?
+const bool debug = false; //Print Debug info?
 
 
 
