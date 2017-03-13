@@ -510,7 +510,7 @@ void FastMGS(RR_t Bst[2*N0][2*N0], const RR_t B[2*N0][2*N0])
     //RR_t C[2*N0], D[2*N0];
     unsigned int j, k;
 
-    cout << endl;
+    //cout << endl;
     //Reducing first vector (obvious)
     for(j=0; j<2*N0; j++)
     {    Bst[0][j] = B[0][j];    }

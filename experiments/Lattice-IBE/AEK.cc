@@ -129,6 +129,10 @@ void BREAK(int message){
 
 void AKE_example(){
 
+	clock_t t1,t2;
+	float ta_ds_keygen, ta_kem_keygen, ta_ds_sig, ta_ds_ver, ta_kem_dec, ta_h2, ta_h1;
+	float tb_ds_keygen, tb_ds_ver, tb_kem_enc, tb_h2, tb_ds_sig, tb_h1;
+
 	//Alice and Bob Generate SigKeyGen (Previous to actual AKE Exchange)
 		ZZX 	Ks_a[2], Ks_b[2];
 		ZZ_pX 	Kv_a   , Kv_b;
@@ -136,15 +140,28 @@ void AKE_example(){
 		MSK_Data * MSKD_a = new MSK_Data;													//ALice: (Ks1,Kv1) <- SigKeyGen
 		MSK_Data * MSKD_b = new MSK_Data;													//Bob:   (Ks2,Ks2) <- SigKeyGen
 
+			t1 = clock();
 		SigKeyGen(Ks_a,Kv_a,MSKD_a);														//ALICE: sk(1) <- BOT
-		SigKeyGen(Ks_b,Kv_b,MSKD_b);														//BOB:   sk(2) <- BOT
+			t2 = clock();
+			ta_ds_keygen = ((float)t2 - (float)t1)/CLOCKS_PER_SEC * 1000;
+		
 
+
+			t1 = clock();
+		SigKeyGen(Ks_b,Kv_b,MSKD_b);														//BOB:   sk(2) <- BOT
+			t2 = clock();
+			tb_ds_keygen = ((float)t2 - (float)t1)/CLOCKS_PER_SEC * 1000;
 
 
 	//Alice
 		vec_ZZ sk_a;
 		ZZX Kd_a, Ke_a_temp;
+
+		t1 = clock();
 		KEMKeyGen(Kd_a,Ke_a_temp);															//ALICE: (Kd,Ke) <- KEMKeyGen
+		t2 = clock();
+		ta_kem_keygen = ((float)t2 - (float)t1)/CLOCKS_PER_SEC * 1000;
+
 		vec_ZZ Ke_a = conv<vec_ZZ>(Ke_a_temp);
 
 		cout << "Ke_a: "<< Ke_a <<"\n";
@@ -152,8 +169,12 @@ void AKE_example(){
 		vec_ZZ r_a;
 		ZZX s_a[2];
 
+		t1 = clock();
 		Sign(s_a,Ke_a,r_a,MSKD_a); //Ks_a == MSKD_a which contains f,g 						//ALICE: simga1 <- Sig(Ks1,Ke)
 								   //s1 => renamed as s2 will be inside s_a[1]
+
+		t2 = clock();
+		ta_ds_sig = ((float)t2 - (float)t1)/CLOCKS_PER_SEC * 1000;
 
 	//Alice sends Sigma1 to Bob 															//AlICE ----> simga1 = <Ke>1 ----> Bob
 		// Aka. Bob has access only to:
@@ -162,7 +183,6 @@ void AKE_example(){
 		// - r_a    ]
 		// - Kv_a   ]--- (Public) Obtained before hand.
 
-
 	//Bob
 		vec_ZZ sk_b;
 		ZZX c_b,k_b; 
@@ -170,21 +190,36 @@ void AKE_example(){
 		ZZX s_b[2];	
 		vec_ZZ r_b; 
 		//cout << Kv_a;
+			t1 = clock();
 		if ( Verify(conv<ZZX>(Kv_a),s_a,Ke_a,r_a) ){										//BOB: if (Ver(Kv1,simga1) != BOT) Then
+				t2 = clock();
+				tb_ds_ver = ((float)t2 - (float)t1)/CLOCKS_PER_SEC * 1000;
 			
-			
+				t1 = clock();
 			Encapsulate(Ke_a_temp,c_b,k_b);													//BOB: (c,k) <- Enc(Ke)
-			
+				t2 = clock();
+				tb_kem_enc = ((float)t2 - (float)t1)/CLOCKS_PER_SEC * 1000;
+
+				t1 = clock();
 			Hash2(Auth_b, Ke_a, conv<vec_ZZ>(c_b), conv<vec_ZZ>(k_b));						//BOB: Auth  <- H2(sigma1,c,k)
+				t2 = clock();
+				tb_h2 = ((float)t2 - (float)t1)/CLOCKS_PER_SEC * 1000;
 
 			vec_ZZ c_Auth;
 			c_Auth = Auth_b;
 			c_Auth.append(conv<vec_ZZ>(c_b));
 
+				t1 = clock();
 			Sign(s_b, Auth_b, r_b, MSKD_b);	//Ks_a == MSKD_a which contains f,g 													//BOB: Sigma2 <- Sig(Ks2,(c,k))
 											//s1 => renamed as s2 will be inside s_a[1]
+				t2 = clock();
+				tb_ds_sig = ((float)t2 - (float)t1)/CLOCKS_PER_SEC * 1000;
 
+				t1 = clock();
 			Hash1(sk_b, Ke_a, conv<vec_ZZ>(c_b), Auth_b, conv<vec_ZZ>(k_b));
+				t2 = clock();
+				tb_h1 = ((float)t2 - (float)t1)/CLOCKS_PER_SEC * 1000;
+			
 			cout <<"SK_b = "<<sk_b <<"\n";
 		}
 		else{ cout << "Bob: Abort!"; return; }
@@ -196,19 +231,38 @@ void AKE_example(){
 		// Auth_b ] -- Sent from Bob
 		// Kv_b   ] -- (Public Obtained before hand).
 
+
 	//Alice
+			t1 = clock();
 		if ( Verify(conv<ZZX>(Kv_b),s_b,Auth_b,r_b) ){
+				t2 = clock();
+				ta_ds_ver = ((float)t2 - (float)t1)/CLOCKS_PER_SEC * 1000;
+
 			ZZX k_a;
+			
+				t1 = clock();
 			Decapsulate(Kd_a,c_b,k_a);
+				t2 = clock();
+				ta_kem_dec = ((float)t2 - (float)t1)/CLOCKS_PER_SEC * 1000;
 
 			vec_ZZ Auth_a;
+			
+				t1 = clock();
 			Hash2(Auth_a, Ke_a, conv<vec_ZZ>(c_b), conv<vec_ZZ>(k_a));
+				t2 = clock();
+				ta_h2 = ((float)t2 - (float)t1)/CLOCKS_PER_SEC * 1000;
+
 			if (IsZero(Auth_a - Auth_b)){
+
+					t1 = clock();
 				Hash1(sk_a, Ke_a, conv<vec_ZZ>(c_b), Auth_b, conv<vec_ZZ>(k_b));
+					t2 = clock();
+					ta_h1 = ((float)t2 - (float)t1)/CLOCKS_PER_SEC * 1000;
+
 				cout <<"SK_a = "<<sk_a <<"\n";
 				//sk_1 <- H1(sigma1,sigma2,k') 
 			}
-			else{cout << "Alice: Abort! (H2 Hashes Didn't Match!)";}
+			else{cout << "Alice: Abort! (H2 Hashes Didn't Match!)"; return; }
 			
 
 		}
@@ -220,6 +274,28 @@ void AKE_example(){
 			cout << "\nsk_a == sk_b; Successful AEK!\n";
 		}
 
+
+		cout << "\n\n========Time (ms)=======\n";
+		cout << "\n==ALICE==\n";
+		cout << "- DS_keygen  :"<< ta_ds_keygen		<< "\n\n";
+		cout << "- KEM_keygen :"<< ta_kem_keygen	<< "\n";
+		cout << "- DS_sign    :"<< ta_ds_sig		<< "\n";
+		cout << "- DS_verify  :"<< ta_ds_ver		<< "\n";
+		cout << "- KEM_dec    :"<< ta_kem_dec		<< "\n";
+		cout << "- H2         :"<< ta_h2			<< "\n";
+		cout << "- H1         :"<< ta_h1			<< "\n";
+		cout << " TOTAL (ALL) :"<< ta_ds_keygen + ta_kem_keygen + ta_ds_sig + ta_ds_ver + ta_kem_dec + ta_h2 + ta_h1 << "\n";
+		cout << " TOTAL (AEK) :"<< ta_kem_keygen + ta_ds_sig + ta_ds_ver + ta_kem_dec + ta_h2 + ta_h1 << "\n";
+
+		cout << "\n==BOB==\n";
+		cout << "- DS_keygen  :"<< tb_ds_keygen		<< "\n\n";
+		cout << "- DS_verify  :"<< tb_ds_ver		<< "\n";
+		cout << "- KEM_enc    :"<< tb_kem_enc		<< "\n";
+		cout << "- H2         :"<< tb_h2			<< "\n";
+		cout << "- DS_sign    :"<< tb_ds_sig		<< "\n";
+		cout << "- H1         :"<< tb_h1			<< "\n";
+		cout << " TOTAL (ALL) :"<< tb_ds_keygen + tb_ds_ver + tb_kem_enc + tb_h2 + tb_ds_sig + tb_h1 << "\n";
+		cout << " TOTAL (AEK) :"<< tb_ds_ver + tb_kem_enc + tb_h2 + tb_ds_sig + tb_h1 << "\n";
 
 }
 
@@ -237,7 +313,7 @@ int main(){
 	    //Test the KEM
 	    run_KEM_example();
 	}	
-	
+
     if (true){
 	    //AKE Example
 	    cout <<"\n\n--RUNNING THE AEK Examples--\n\n";
