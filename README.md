@@ -1,5 +1,6 @@
-# PQC#
-###Post-Quantum Cryptography Experiments###
+# PQC #
+
+### Post-Quantum Cryptography Experiments ###
 This repo contains the Post-Quantum research work that I am doing for my Master's Thesis for UCSB (2016-2017).
 
 - RLWE-AKE: Implementing an AKE based on the work of [Del Pino, Lyubashevsky, Pointcheval](https://eprint.iacr.org/2016/435.pdf)
