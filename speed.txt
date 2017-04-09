@@ -1,0 +1,108 @@
+==ALICE==
+- DS_keygen  :2659.27
+
+- KEM_keygen :49.211  (2 Retries)
+- DS_sign    :6.928
+- DS_verify  :4.749
+- KEM_dec    :15.508
+- H2         :0.298
+- H1         :0.379
+ TOTAL (ALL) :2736.34
+ TOTAL (AKE) :77.073
+
+==BOB==
+- DS_keygen  :2737.91
+
+- DS_verify  :3.955
+- KEM_enc    :4.459
+- H2         :0.161
+- DS_sign    :7.193
+- H1         :0.224
+ TOTAL (ALL) :2753.9
+ TOTAL (AKE) :15.992
+
+
+*Notice: THE DS_Keygen is done once at init for both Bob and Alice; All following connections reuse the DS Secret Keys.
+
+### ### ### ### ###
+#
+# Timing Reference Code
+#
+# clock_t t1,t2;
+# float t_diff;
+# 
+# t1 = clock();
+# /* Code */
+# t2 = clock();
+# t_diff = ((float)t2 - (float)t1)/CLOCKS_PER_SEC * 1000;
+#
+### ### ### ### ###
+
+=== Timing Breakdown ===
+
+KEM_Keygen
+ - Generate F (RandomPolyFixedSqNorm)   : 0.369
+ - Generate G (RandomPolyFixedSqNorm)   : 0.392
+ - Generate F_inv  (Inverse2)           : 10.794
+ - Generate F_inv2 (Inverse2)           : 6.047
+ - Generate G_inv  (Inverse2)           : 11.498
+ - Generate G_inv2 (Inverse2)           : 9.265
+ - Calculate Ke=(f*g_inv)%phi           : 4.141
+ - Calculate ModCoeffs(Ke,q1)           : 0.069
+
+KEM_Enc
+ - Initialize ZZ_p init                 : 0.005
+ - Generate r (RandomPolyFixedSqNorm)   : 0.215
+ - Generate e (RandomPolyFixedSqNorm)   : 0.2
+ - Calculate c = (Ke*r+e)%phi           : 3.326
+ - Calculate ModCoeffs(c,q1)            : 0.063
+ - Initialize ZZ_p init                 : 0.001
+ - k = e%2                              : 0.019
+
+KEM_Dec
+ - Initialize ZZ_p init                 : 0.002
+ - Calculate Kd*c%phi                   : 3.631
+ - Calculate modCoeffs                  : 0.132
+ - Generate Inverse Kd                  : 6.218 [Unecessary - Get from KeyGen]
+ - Calculate ModCoeffs                  : 0.053
+ - Calculate k=k*Kd_inv%phi             : 3.255
+ - Calculate ModCoeffs(k,2)             : 0.062
+
+DS_Keygen [Low Optimization Priority - Done Once at System's First Startup]
+ - Keygen                               : 2017.58
+ - CompleteMSK                          : 310.642
+
+DS_Sign
+ - Init (RandomVector)                  : 0.093
+ - Hash                                 : 0.036
+ - Extract (s1,s2)                      : 5.71
+    - Init                                  : 0.045
+    - Loop N                                : 0.122
+    - GPV                                   : 5.409
+        - Loop 2N                               : 0.001
+        - Loop 2N-1                             : 5.405
+            - DotProduct                            : 0.004  (x2N-1)
+            - Sample4                               : 0.001  (x2N-1)
+            - Loop 2N                               : 0.005  (x2N-1)
+        - Loop 2N                               : 0.003    
+    - Loop N                                : 0.007
+    - Loop N                                : 0.047
+
+DS_Verify
+ - Initialize Cyclo(); vec_ZZ();        : 0.001
+ - Hash                                 : 0.035
+ - Calc Aux = hashed-s[1]*Kb%phi        : 3.45
+ - Conv<ZZX>(aux)                       : 0.072
+ - modCoeffs(s[0],q1)                   : 0.053
+ - loop deg(s[0])                       : 0.106
+ - norm1,norm2,norm3                    : 0.001
+ - Check norm3 < 1.16*sqrt(...)         : 0.003
+
+H2 & H1
+ - Initialize Sha256                    : 0.000001
+ - Loop through n elements              : 0.000115
+ - Sha256 Final                         : 0
+ - Loop (n) - Auth[i] = digest%q        : 0.000002
+
+
+

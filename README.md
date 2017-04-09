@@ -5,6 +5,11 @@ This repo contains the Post-Quantum research work that I am doing for my Master'
 - AKE: Implementing a Lattice-Based AKE based on the work of [Del Pino, Lyubashevsky, Pointcheval](https://eprint.iacr.org/2016/435.pdf)
 - MISC: This is a temporary folder where I keep all my WIP, interesting tid-bits of code, or things that didn't work (but I kept anyways to look fondly at in the future).
 
+## PreReqs ##
+```
+sudo apt-get install libgmp-dev libntl-dev libssl-dev
+```
+
 ## Running the AKE ##
 ```
 cd AKE
