@@ -339,7 +339,7 @@ ZZ_pX Inverse2(const ZZX& f,int q)
 ZZ_pX Quotient(const ZZX& f, const ZZX& g)
 {
     ZZ_pX f_1, g0, h0, phi0;
-    f_1 = Inverse(f);
+    f_1 = Inverse2(conv<ZZX>(f),q0);//f_1 = Inverse(f);
     g0 = conv<ZZ_pX>(g);
     phi0 = conv<ZZ_pX>(phi);
     h0 = (f_1*g0)%phi0;

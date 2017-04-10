@@ -9,8 +9,8 @@
 
 
 //void modCoeffs(ZZX& f, ZZ p);
-void KEMKeyGen(ZZX& Kd, ZZX& Ke);
+void KEMKeyGen(ZZX& Kd, ZZX& Ke, ZZX& Kd_inv2);
 void Encapsulate(ZZX& Ke, ZZX& c, ZZX& k);
-void Decapsulate(ZZX& Kd, ZZX& c, ZZX& k);
+void Decapsulate(ZZX& Kd, ZZX& c, ZZX& k, ZZX& Kd_inv2);
 void run_KEM_example();
 #endif

@@ -1,0 +1,121 @@
+## FUNCTION DEPENDENCY GRAPH ##
+
+------------------------------------KEM
+
+KEMKeyGen
+ - RandomPolyFixedSqNorm ✔
+   - <NTL>
+   - Sample3
+     - Sample2
+       - Sample1
+         - <Random>
+         - <Math>
+ - Inverse2 
+   - <NTL> 	 
+ - modCoeffs ✔
+
+Encapsulate
+ - <NTL>
+ - RandomPolyFixedSqNorm ✔
+   - <NTL>
+   - Sample3
+     - Sample2
+       - Sample1
+         - <Random>
+         - <Math>
+ - modCoeffs ✔
+
+Decapsulate
+ - <NTL>
+ - Inverse2 [* Take this out] 
+ - modCoeffs ✔
+
+
+------------------------------------DS
+
+SigKeyGen
+ - <NTL>
+ - Keygen
+   - <NTL>
+   - GenerateBasis
+     - <NTL>
+     - RandomPolyFixedSqNorm ✔
+       - <NTL>
+       - Sample3
+         - Sample2
+           - Sample1
+	     - <Random>
+	     - <Math>
+     - GS_Norm
+       - ZZXToFFT
+         - <NTL>
+         - FFTStep ✔
+       - MyRealReverseFFT
+         - ReverseFFTStep ✔
+     - ValidPair
+       - <NTL>
+     - ReductionCoefficient
+       - <NTL>
+       - Reverse ✔
+         - <NTL>
+       - FastMod
+         - <NTL>
+     - FastMod
+       - <NTL>
+     - Reverse ✔
+       - <NTL>
+     - ReductionCoefficient
+       - <NTL>
+       - Reverse
+         - <NTL>
+       - FastMod
+         - <NTL>
+   - Quotient
+     - Inverse2
+ - CompleteMSK
+   - <NTL>
+   - ZZXToFFT
+   - CompletePrivateKey
+     - BasisFromPolynomial
+       - <NTL>
+       - AnticircularMatrix
+         - <NTL>
+   - FastMGS ✔
+     - DotProduct ✔
+   - DotProduct ✔
+ - Quotient
+   - Inverse2
+     - <NTL> 
+
+Sign
+ - RandomVector
+   - <NTL> / <Random>
+ - Hash
+   - <NTL>
+   - SHA256
+
+ - IBE_Extract
+   - <NTL>
+   - GPV
+     - DotProduct 
+     - Sample4
+       - <Random>
+       - Sample3
+         - Sample2
+           - Sample1
+             - <Random> / <Math>
+     - 
+
+Verify
+ - <NTL> / <MATH>
+ - Cyclo
+   - <NTL>
+ - Hash
+   - <NTL>
+   - SHA256
+ - modCoeffs ✔
+
+
+
+
+

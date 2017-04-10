@@ -28,9 +28,8 @@ const bool debug = false; //Print Debug info?
 
 
 
-void KEMKeyGen(ZZX& Kd, ZZX& Ke){
+void KEMKeyGen(ZZX& Kd, ZZX& Ke, ZZX& Kd_inv2){
     
-
     bool valid = false;
     int retries = 0;
     while (!valid){
@@ -42,13 +41,17 @@ void KEMKeyGen(ZZX& Kd, ZZX& Ke){
             
             
 
-            //Check that f is invertible in both Zq[x]/<x^n+1> and Z2[x]/<x^n+1>
-            ZZX f_inv = conv<ZZX>(Inverse2(conv<ZZX>(f),q0));
+            //Check that f and g are invertible in both Zq[x]/<x^n+1> and Z2[x]/<x^n+1>
             ZZX f_inv2 = conv<ZZX>(Inverse2(conv<ZZX>(f),2));
+            ZZX g_inv2 = conv<ZZX>(Inverse2(conv<ZZX>(g),2));            
 
-            //Check that g is invertible in both Zq[x]/<x^n+1> and Z2[x]/<x^n+1>
+            ZZX f_inv = conv<ZZX>(Inverse2(conv<ZZX>(f),q0));
             ZZX g_inv = conv<ZZX>(Inverse2(conv<ZZX>(g),q0));
-            ZZX g_inv2 = conv<ZZX>(Inverse2(conv<ZZX>(g),2));
+
+             
+
+            
+
 
 
             //Debuggin' Information
@@ -68,6 +71,7 @@ void KEMKeyGen(ZZX& Kd, ZZX& Ke){
 
 
             Kd = g;
+            Kd_inv2 = g_inv2;
             Ke = (f*g_inv)%phi;
             //cout << "!"<<Ke<<"!";
             modCoeffs(Ke,q1);
@@ -109,7 +113,7 @@ void Encapsulate(ZZX& Ke, ZZX& c, ZZX& k){
     return;
 }
 
-void Decapsulate(ZZX& Kd, ZZX& c, ZZX& k){
+void Decapsulate(ZZX& Kd, ZZX& c, ZZX& k, ZZX& Kd_inv2){
 
     ZZ_p::init(conv<ZZ>(q0));
 
@@ -120,13 +124,13 @@ void Decapsulate(ZZX& Kd, ZZX& c, ZZX& k){
 
     //ZZ_p::init(conv<ZZ>(2));
 
-    ZZX Kd_inv = conv<ZZX>(Inverse2(conv<ZZX>(Kd),2));
+    //ZZX Kd_inv = conv<ZZX>(Inverse2(conv<ZZX>(Kd),2));
     modCoeffs(k,conv<ZZ>(2));
     //This can also be done by conv k to ZZ_pX
     
     //cout << "!!"<<k<<"!!\n";
     
-    k = (k*Kd_inv)%phi;//conv<ZZX>(conv<ZZ_pX>(k)/conv<ZZ_pX>(Kd));
+    k = (k*Kd_inv2)%phi;//conv<ZZX>(conv<ZZ_pX>(k)/conv<ZZ_pX>(Kd));
     modCoeffs(k,conv<ZZ>(2));
 
     return;
@@ -138,10 +142,10 @@ void run_KEM_example(){
     clock_t t1, t2;
     float t_keygen, t_enc, t_dec;
 
-    ZZX Kd,Ke;
+    ZZX Kd,Ke,Kd_inv2;
     
     t1 = clock();
-    KEMKeyGen(Kd,Ke);
+    KEMKeyGen(Kd,Ke,Kd_inv2);
     t2 = clock();
     t_keygen = ((float)t2 - (float)t1)/1000000.0F;
  
@@ -156,7 +160,7 @@ void run_KEM_example(){
 
     t1 = clock();
     ZZX k2;
-    Decapsulate(Kd,c,k2);
+    Decapsulate(Kd,c,k2,Kd_inv2);
     t2 = clock();
     t_dec = ((float)t2 - (float)t1)/1000000.0F;
     cout << "\nk':" << k2 << "\n";

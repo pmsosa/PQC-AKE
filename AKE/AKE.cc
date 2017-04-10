@@ -155,16 +155,16 @@ void AKE_example(){
 
 	//Alice
 		vec_ZZ sk_a;
-		ZZX Kd_a, Ke_a_temp;
+		ZZX Kd_a, Ke_a_temp, Kd_inv2_a;
 
 		t1 = clock();
-		KEMKeyGen(Kd_a,Ke_a_temp);															//ALICE: (Kd,Ke) <- KEMKeyGen
+		KEMKeyGen(Kd_a,Ke_a_temp, Kd_inv2_a);															//ALICE: (Kd,Ke) <- KEMKeyGen
 		t2 = clock();
 		ta_kem_keygen = ((float)t2 - (float)t1)/CLOCKS_PER_SEC * 1000;
 
 		vec_ZZ Ke_a = conv<vec_ZZ>(Ke_a_temp);
 
-		cout << "Ke_a: "<< Ke_a <<"\n";
+		//cout << "Ke_a: "<< Ke_a <<"\n";
 
 		vec_ZZ r_a;
 		ZZX s_a[2];
@@ -220,7 +220,7 @@ void AKE_example(){
 				t2 = clock();
 				tb_h1 = ((float)t2 - (float)t1)/CLOCKS_PER_SEC * 1000;
 			
-			cout <<"SK_b = "<<sk_b <<"\n";
+			//cout <<"SK_b = "<<sk_b <<"\n";
 		}
 		else{ cout << "Bob: Abort!"; return; }
 
@@ -241,7 +241,7 @@ void AKE_example(){
 			ZZX k_a;
 			
 				t1 = clock();
-			Decapsulate(Kd_a,c_b,k_a);
+			Decapsulate(Kd_a,c_b,k_a, Kd_inv2_a);
 				t2 = clock();
 				ta_kem_dec = ((float)t2 - (float)t1)/CLOCKS_PER_SEC * 1000;
 
@@ -259,8 +259,8 @@ void AKE_example(){
 					t2 = clock();
 					ta_h1 = ((float)t2 - (float)t1)/CLOCKS_PER_SEC * 1000;
 
-				cout <<"SK_a = "<<sk_a <<"\n";
-				//sk_1 <- H1(sigma1,sigma2,k') 
+				//cout <<"SK_a = "<<sk_a <<"\n";
+
 			}
 			else{cout << "Alice: Abort! (H2 Hashes Didn't Match!)"; return; }
 			
