@@ -9,12 +9,14 @@
 #include <gmp.h>
 
 
+
 //#include "Sampling.h"
 #include "params.h"
 //#include "FFT.h"
 #include "Random.h"
 #include "Algebra.h"
 #include "KEM.h"
+#include "FFT.h"
 
 using namespace std;
 using namespace NTL;
@@ -94,7 +96,10 @@ void Encapsulate(ZZX& Ke, ZZX& c, ZZX& k){
     ZZX r = RandomPolyFixedSqNorm(kem_norm,N0-1);
     ZZX e = RandomPolyFixedSqNorm(kem_norm,N0-1);
 
-    c = conv<ZZX>((2*conv<ZZ_pX>(Ke)*conv<ZZ_pX>(r))+conv<ZZ_pX>(e))%phi;
+    FFTmultiply(c,Ke,r);
+    c = conv<ZZX>((2*conv<ZZ_pX>(c))+conv<ZZ_pX>(e))%phi;
+
+    // c = conv<ZZX>((2*conv<ZZ_pX>(Ke)*conv<ZZ_pX>(r))+conv<ZZ_pX>(e))%phi;
 
     modCoeffs(c,q1);
 
@@ -117,7 +122,8 @@ void Decapsulate(ZZX& Kd, ZZX& c, ZZX& k, ZZX& Kd_inv2){
 
     ZZ_p::init(conv<ZZ>(q0));
 
-    k = conv<ZZX>(conv<ZZ_pX>(Kd*c))%phi;
+    FFTmultiply(k,Kd,c);
+    k = conv<ZZX>(conv<ZZ_pX>(k))%phi;
     modCoeffs(k,q1);
 
     //cout << k;
@@ -129,8 +135,10 @@ void Decapsulate(ZZX& Kd, ZZX& c, ZZX& k, ZZX& Kd_inv2){
     //This can also be done by conv k to ZZ_pX
     
     //cout << "!!"<<k<<"!!\n";
-    
-    k = (k*Kd_inv2)%phi;//conv<ZZX>(conv<ZZ_pX>(k)/conv<ZZ_pX>(Kd));
+    //FFT THIS!
+    //cout << deg(k) << " -- " << deg(Kd_inv2) << "\n";
+    FFTmultiply(k,k,Kd_inv2);
+    k = (k)%phi;//conv<ZZX>(conv<ZZ_pX>(k)/conv<ZZ_pX>(Kd));
     modCoeffs(k,conv<ZZ>(2));
 
     return;

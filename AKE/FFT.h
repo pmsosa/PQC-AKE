@@ -3,6 +3,7 @@
 
 #include "params.h"
 
+void FFTmultiply(ZZX& result, ZZX& a, ZZX& b);
 
 void FFTStep(CC_t * const f_fft, RR_t const * const f, const unsigned long N, const CC_t w0);
 void ReverseFFTStep(CC_t * const f, CC_t const * const f_fft, const unsigned long N, const CC_t w0);

@@ -64,7 +64,9 @@ bool Verify(ZZX Kv,ZZX s[2], vec_ZZ& msg, vec_ZZ& r){
     const ZZX phi = Cyclo();
     vec_ZZ hashed = vec_ZZ();
     Hash(hashed, r, msg);
-    ZZ_pX aux = conv<ZZ_pX>((conv<ZZX>(hashed) - (s[1]*Kv))%phi);
+    ZZX c;
+    FFTmultiply(c,Kv,s[1]);
+    ZZ_pX aux = conv<ZZ_pX>((conv<ZZX>(hashed) - (c))%phi);
 
     s[0] = conv<ZZX>(aux);
     modCoeffs(s[0],q1);
@@ -418,28 +420,28 @@ void IBE_Extract(ZZX SK_id[2], vec_ZZ id, const MSK_Data * const MSKD)
 }
 
 
-unsigned long IBE_Verify_Key(const ZZX SK_id[2], const vec_ZZ id, const MSK_Data * const MSKD)
-{
-    unsigned int i;
-    ZZX f,g,t,aux;
+// unsigned long IBE_Verify_Key(const ZZX SK_id[2], const vec_ZZ id, const MSK_Data * const MSKD)
+// {
+//     unsigned int i;
+//     ZZX f,g,t,aux;
 
-    f = MSKD -> PrK[0];
-    g = MSKD -> PrK[1];
+//     f = MSKD -> PrK[0];
+//     g = MSKD -> PrK[1];
     
-    t = conv<ZZX>(id);
-    aux = ((SK_id[0] - t)*f + g*SK_id[1])%phi;
+//     t = conv<ZZX>(id);
+//     aux = ((SK_id[0] - t)*f + g*SK_id[1])%phi;
 
-    for(i=0; i<N0; i++)
-    {
-        aux[i] %= q1;
-    }
+//     for(i=0; i<N0; i++)
+//     {
+//         aux[i] %= q1;
+//     }
 
-    if( IsZero(aux) != 0)
-    {
-        cout << "The signature (s1,s2) doesn't verify the required equality [ (s1 - t)*f + g*s2 = 0 ] !\nActually, (s1 - t)*f + g*s2 = " << aux << endl << endl;
-    }
-    return IsZero(aux);
-}
+//     if( IsZero(aux) != 0)
+//     {
+//         cout << "The signature (s1,s2) doesn't verify the required equality [ (s1 - t)*f + g*s2 = 0 ] !\nActually, (s1 - t)*f + g*s2 = " << aux << endl << endl;
+//     }
+//     return IsZero(aux);
+// }
 
 
 // void IBE_Encrypt(long C[2][N0], const long m[N0], const long id0[N0], const MPK_Data * const MPKD)

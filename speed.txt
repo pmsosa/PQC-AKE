@@ -1,3 +1,28 @@
+Newer Times: 
+==ALICE==
+- DS_keygen  :2525.28
+
+- KEM_keygen :40.573
+- DS_sign    :6.182
+- DS_verify  :1.037
+- KEM_dec    :1.615
+- H2         :0.126
+- H1         :0.224
+ TOTAL (ALL) :2575.04
+ TOTAL (AKE) :49.757
+
+==BOB==
+- DS_keygen  :2681.96
+
+- DS_verify  :1.112
+- KEM_enc    :1.297
+- H2         :0.123
+- DS_sign    :6.116
+- H1         :0.229
+ TOTAL (ALL) :2690.84
+ TOTAL (AKE) :8.877
+
+Older Times:
 ==ALICE==
 - DS_keygen  :2659.27
 

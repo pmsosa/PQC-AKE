@@ -15,6 +15,23 @@ using namespace std;
 using namespace NTL;
 
 
+//FFT Multiply
+void FFTmultiply(ZZX& result, ZZX& a, ZZX& b){
+    unsigned long i;
+    CC_t a_FFT[N0], b_FFT[N0], result_FFT[N0];
+    ZZXToFFT(a_FFT, a);
+    ZZXToFFT(b_FFT, b);
+
+    for(i=0; i<N0; i++)
+    {
+        result_FFT[i] = a_FFT[i]*b_FFT[i];
+    }
+
+    FFTToZZX(result,result_FFT);
+
+}
+
+
 void FFTStep(CC_t * const f_fft, RR_t const * const f, const unsigned long N, const CC_t w0)
 {
     if(N==1)
@@ -134,11 +151,16 @@ void ZZXToFFT(CC_t * f_FFT, const ZZX f)
     RR_t f_double[N0];
     unsigned int i;
 
-    assert(deg(f)==N0-1);
+    //assert(deg(f)==N0-1);
     assert(MaxBits(f)<900);
     for(i=0; i<N0; i++)
     {
-        f_double[i] = ( RR_t ( conv<double>(f[i]) ) );
+        if (i <= deg(f)){
+            f_double[i] = ( RR_t ( conv<double>(f[i]) ) );
+        }
+        else{
+            f_double[i] = ( RR_t ( conv<double>(0) ) );
+        }
     }
 
     FFTStep(f_FFT, f_double, N0, omega);
