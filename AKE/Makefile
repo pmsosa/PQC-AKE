@@ -3,7 +3,7 @@ CC=g++
 AR=ar
 
 # Case 1: These are the standard compilation flags CCFLAGS and linker flags LDFLAGS.
-CCFLAGS= -Wall -std=gnu++0x -Ofast
+CCFLAGS= -Wall -std=gnu++0x -Ofast -mavx2 -mavx -mpclmul
 LDFLAGS= -lntl -lgmp -lcrypto
 
 # Case 2: If NTL is installed in a specific location, say /path/to/ntl, you must specify it by using the CCFLAGS and LDFLAGS below instead.

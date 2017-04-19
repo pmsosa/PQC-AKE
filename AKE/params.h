@@ -18,9 +18,47 @@ using std::complex;
 // N0 is the degree of the polynomial ring used. N0 must be a power of 2!
 // q0 is the modulus w.r.t. whom the integers are reduced. We suggest to take q0 prime
 //=====================================================================================
-#define N0 512
+
+
 #define q0 (12289)
+#define DS_SIGMA 1.17
+///////////////////////////////////// N = 512
+#define N0 512
+
+
 #define KEM_NORM 93
+  //Security
+  // -- Seiving Complexity:     > 128
+  // -- Sieving Space:          > 114
+  // -- Enumeartion Complexity: > 185
+  //Failure Prob: ~2^-30
+
+
+//#define KEM_NORM 67
+  //Security
+  // -- Seiving Complexity:     > 115
+  // -- Sieving Space:          > 104
+  // -- Enumeartion Complexity: > 157
+  //Failure Prob: ~2^-128
+
+
+///////////////////////////////////// N = 1024
+//#define N0 1024
+
+//#define KEM_NORM 110
+  //Security
+  // -- Seiving Complexity:     > 269
+  // -- Sieving Space:          > 227
+  // -- Enumeartion Complexity: > 645
+  //Failure Prob: ~2^-30
+
+//#define KEM_NORM 93
+  //Security
+  // -- Seiving Complexity:     > 246
+  // -- Sieving Space:          > 209
+  // -- Enumeartion Complexity: > 503
+  //Failure Prob: ~2^-128
+
 //======================================================================================
 
 

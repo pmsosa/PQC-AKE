@@ -22,8 +22,8 @@ using namespace NTL;
 const ZZX phi = Cyclo();
 
 
-const bool dtime = false;  //Print Timing info?
-const bool debug = false; //Print Debug info?
+const bool dtime = false;  //Print Timing Info
+const bool debug = false;  //Print Debug Info
 
 ///DIGITAL SIGNATURE - Pedro M. Sosa///
 
@@ -49,9 +49,13 @@ void SigKeyGen(ZZX Ks[2],ZZ_pX& Kv, MSK_Data* MSKD){
     return;
 }
 
+/////////////////////////////////////////////////////////////////////
+// Scheme with message recovery!
+/////////////////////////////////////////////////////////////////////
+
 void Sign(ZZX s[2],vec_ZZ& msg, vec_ZZ& r, MSK_Data* MSKD){
     //Hash Function
-    r = RandomVector();
+    r = conv<vec_ZZ>(RandomPoly(50));
     vec_ZZ hashed;
     Hash(hashed, r, msg);
     IBE_Extract(s, hashed, MSKD);
@@ -82,9 +86,9 @@ bool Verify(ZZX Kv,ZZX s[2], vec_ZZ& msg, vec_ZZ& r){
     norm2 = sqrt(norm2);
     norm3 = sqrt(norm1*norm1+norm2*norm2);
     if (debug){
-        cout << norm3 << " |" << conv<ZZ>(1.17*sqrt(q0/2*N0)*sqrt(2*N0));
+        cout << norm3 << " |" << conv<ZZ>(DS_SIGMA*sqrt(q0/2*N0)*sqrt(2*N0));
     }
-    return (norm3 < conv<ZZ>(1.17*sqrt(q0/2*N0)*sqrt(2*N0)));//conv<ZZ>(1.36*q0/2*sqrt(2*N0)));
+    return (norm3 < conv<ZZ>(DS_SIGMA*sqrt(q0/2*N0)*sqrt(2*N0)));//conv<ZZ>(1.36*q0/2*sqrt(2*N0)));
 }
 
 void Hash(vec_ZZ&  hashed, vec_ZZ& r, vec_ZZ& msg){
@@ -122,7 +126,323 @@ void Hash(vec_ZZ&  hashed, vec_ZZ& r, vec_ZZ& msg){
     }
 }
 
+/////////////////////////////////////////////////////////////////////
+// Scheme without message recovery!
+/////////////////////////////////////////////////////////////////////
+
+
+void HashF(vec_ZZ&  hashed, vec_ZZ& msg){
+    SHA256_CTX ctx;
+    unsigned char digest[SHA256_DIGEST_LENGTH];
+    SHA256_Init(&ctx);
+    //SHA256_Update(&ctx, "F", 1);
+
+    //vec_ZZ msg = RandomVector();
+    hashed.SetLength(32);
+    //cout << SHA256_DIGEST_LENGTH <<"\n";
+    //cout << "hashed:  ------ "<< hashed <<"\n\n";
+    //cout << "MSG" << msg << "\n";
+
+    // if (debug){
+    //     cout << "msg:" << msg << "\n";
+    //     cout << "  r:" << r << "\n";
+    //     cout << "m+r:" << hashed << "\n";
+    // }
+
+    //cout << "Elem: ";
+    for(int i = 0; i < msg.length(); i++) {
+        char f = (conv<int>(msg[i])%255);
+        SHA256_Update(&ctx, &f, 1);
+        //cout << int(f) << ",";
+    }
+
+    //cout << "\nHASH:";
+    SHA256_Final(digest, &ctx);
+    for(int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+        //cout << int(digest[i]) <<",";
+    }
+
+
+    for(int i=0; i < 32 and i < N0; i++){
+        //cout << int(digest[i]) << " ";
+        hashed[i] = conv<ZZ>(digest[i])%q0;
+    }
+    //cout << "\n\nh:" <<hashed <<"\n";
+    if (debug){
+        cout << "Hashed F: " << hashed << "\n";
+    }
+}
+
+
+void HashH(vec_ZZ&  hashed, vec_ZZ& msg){
+    SHA256_CTX ctx;
+    unsigned char digest[SHA256_DIGEST_LENGTH];
+    SHA256_Init(&ctx);
+    SHA256_Update(&ctx, "H", 1);
+
+    //vec_ZZ msg = RandomVector();
+    hashed.SetLength(32);
+
+    // if (debug){
+    //     cout << "msg:" << msg << "\n";
+    //     cout << "  r:" << r << "\n";
+    //     cout << "m+r:" << hashed << "\n";
+    // }
+
+    for(int i = 0; i < msg.length(); i++) {
+        char f = (conv<int>(msg[i])%255);
+        SHA256_Update(&ctx, &f, 1);
+    }
+
+    SHA256_Final(digest, &ctx);
+
+
+    for(int i=0; i < 32 and i < N0; i++){
+        //cout << int(digest[i]) << " ";
+        hashed[i] = conv<ZZ>(digest[i])%q0;
+    }
+    if (debug){
+        cout << "Hashed H: " << hashed << "\n";
+    }
+}
+
+void Sign2(ZZX s[2],vec_ZZ& m2, vec_ZZ& msg, MSK_Data* MSKD){
+    vec_ZZ m1;
+    vec_ZZ h1,f1,t;
+
+    // 512: |m1|=496, 1024: |m1|= 1008
+
+    int m1_size = 480;
+    m1.SetLength(m1_size);
+    m2.SetLength(msg.length()-m1_size);
+
+    for (int i=0; i < m1_size; i++){
+        m1[i] = msg[i];
+        if (i+m1_size < msg.length()){
+            m2[i] = msg[i+m1_size];
+        }
+    }
+    if (debug){
+        cout << "M:"  << msg << "\n";
+        cout << "M1:" << m1  << "\n";
+        cout << "M2:" << m2  << "\n";
+    }
+
+    //cout << "M1:" << m1  << "\n";
+
+    // t = (m1 + F(H(m))) mod q || H(m))
+    HashH(h1,msg);
+    HashF(f1,h1);
+    //cout << "f1:"<<f1 <<"\n";
+    //cout << "h1:"<<h1 <<"\n";
+    //cout << "f1:"<<f1 << "\n";
+    f1.SetLength(480);
+    for (int i=0; i < f1.length(); i++){
+        f1[i] = (f1[i]+m1[i])%q0;
+    }
+
+
+
+    cout << "To Be Recovered:"<<m1 <<"\n";
+
+    t = f1;
+    t.append(h1);
+
+    //cout << "t:"<<t <<"\n";
+    //cout << "\nt:"<< t.length()<<"\n";
+
+
+   
+
+    //cout << "\nt:"<< t.length()<<"\n";
+    
+    // s1,s2 DS such that hs1 +s2 = t mod q
+    IBE_Extract(s, t, MSKD);
+
+
+
+
+
+    // This returns s[1] and s[2] and m2 (last part of message)
+}
+
+bool Verify2(ZZX Kv,ZZX s[2], vec_ZZ& m2, vec_ZZ& m1){
+    //Hash id
+    vec_ZZ m,t,t1,h1,f1,t2;
+
+    const ZZX phi = Cyclo();
+    vec_ZZ hashed = vec_ZZ();
+    ZZX c;
+    FFTmultiply(c,Kv,s[1]);
+    c = c + s[0];
+    t = conv<vec_ZZ>(c);
+
+    t1.SetLength(480);
+    h1.SetLength(32);
+
+
+
+    for (int i=0; i < 480; i++){
+        t1[i] = t[i]%q0;
+        if (i < 32){
+            h1[i] = t[i+480]%q0;
+        }
+
+    }
+
+
+
+    //cout << "t:" <<t  <<"\n";
+    //cout << "t1:"<<t1 <<"\n";
+    //cout << "h1:"<<h1<<"\n";
+    //cout << "m2o:"<<m2_o<<"\n";
+
+    HashF(f1,h1);
+
+    //cout << "f1:"<<f1 <<"\n";
+
+    m1.SetLength(t1.length());
+    f1.SetLength(t1.length());
+    for (int i=0; i < t1.length(); i++){
+        m1[i] = (t1[i] - f1[i])%q0;
+    }
+
+    m = m1;
+    m.append(m2);
+    //cout << "m: " << m1 << "\n";
+    HashH(t2,m1);
+
+    //cout << "t2"<<t2 <<"\n";
+    //cout << "h1"<<h1 <<"\n";
+    for (int i=0; i < h1.length(); i++){
+        if (h1[i] != t2[i]){
+            return false;
+        }
+    }
+    // m1 = conv<vec_ZZ>(t);
+    // modCoeffs(s[0],q1);
+
+    double norm1 = 0;
+    double norm2 = 0;
+    double norm3 = 0;
+    for(int i=0; i < deg(s[0]);i++){
+        norm1 += conv<double>(s[0][i]*s[0][i]);
+        norm2 += conv<double>(s[1][i]*s[1][i]);
+    }
+    norm1 = sqrt(norm1);
+    norm2 = sqrt(norm2);
+    norm3 = sqrt(norm1*norm1+norm2*norm2);
+    if (debug){
+        cout << norm3 << " |" << conv<ZZ>(DS_SIGMA*sqrt(q0/2*N0)*sqrt(2*N0));
+    }
+    return (norm3 < conv<ZZ>(DS_SIGMA*sqrt(q0/2*N0)*sqrt(2*N0)));//conv<ZZ>(1.36*q0/2*sqrt(2*N0)));
+}
+
+
+
+
+
 void run_DS_example(){
+
+
+    clock_t t1, t2;
+    float t_keygen, t_sig, t_ver;
+
+    /// RUNNING THE KEYGEN ALGORITHM
+        
+        ZZX Ks[2];
+        ZZ_pX Kv;
+        MSK_Data * MSKD = new MSK_Data;
+
+        t1 = clock();
+        SigKeyGen(Ks,Kv,MSKD);
+        t2 = clock();
+        t_keygen = ((float)t2 - (float)t1)/1000000.0F;
+        //ZZX Kv2 = conv<ZZX>(Kv);
+
+    /// RUNNING THE SIGN ALGORITHM
+        vec_ZZ r,m2;
+        vec_ZZ msg = RandomVector();
+        ZZX s[2];
+        t1 = clock();
+        Sign2(s,m2,msg,MSKD);
+
+        t2 = clock();
+        t_sig = ((float)t2 - (float)t1)/1000000.0F;
+
+        //PRINTIN DEBUG INFO
+        if (debug){
+            cout << "\n---Sign---\n";
+            cout << "\n (rand) message: ";
+            for(int i = 0; i < N0;i++){
+                cout << msg[i] << ",";
+            }
+            cout <<"\n";
+
+            cout << "             s1: ";
+            for(int i = 0; i < N0;i++){
+                cout << s[0][i] << ",";
+            }
+            cout <<"\n";
+
+            cout << "     (debug) s2: ";
+            for(int i = 0; i < N0;i++){
+                cout << s[1][i] << ",";
+            }
+            cout <<"\n";
+        }
+
+    /// RUNNING THE VERIFY ALGORITHM
+        
+
+        //Notice
+        //1. Turn Kv into ZZX(Kv)
+        //2. We will pretend that s[0] is empty since we didn't get that info
+        vec_ZZ recovery;
+        t1 = clock();
+        bool valid = Verify2(conv<ZZX>(Kv),s, m2,recovery);
+        t2 = clock();
+        t_ver = ((float)t2 - (float)t1)/1000000.0F;
+
+        cout <<"Recovery" << recovery;
+
+        //Not Certain of this part.
+        // double norm1 = 0;
+        // double norm2 = 0;
+        // double norm3 = 0;
+        // for(int i=0; i < deg(s[0]);i++){
+        //     norm1 += conv<double>(s[0][i]*s[0][i]);
+        //     norm2 += conv<double>(s[1][i]*s[1][i]);
+        // }
+        // norm1 = sqrt(norm1);
+        // norm2 = sqrt(norm2);
+        // norm3 = sqrt(norm1*norm1+norm2*norm2);
+        // cout << norm3 << " | " << conv<ZZ>(1.36*q0/2*sqrt(2*N0));
+
+        //PRINTIN DEBUG INFO
+        if (debug){
+            cout << "\n--Verify---\n";
+            cout << "     derived s1: ";
+            for (int i=0; i < N0; i++){
+                cout << s[0][i] << ",";
+            }
+            cout <<"\n";
+
+            cout << "          Valid: " << valid <<"\n" ;
+        }
+
+    if (dtime){
+        cout << "\nTiming\n";
+        cout << "DSKeyGen : " << t_keygen << "\n";
+        cout << "DSSign   : " << t_sig << "\n";
+        cout << "DSVerif  : " << t_ver << "\n";
+    }
+
+    return;
+}
+
+
+void run_DS_example_orig(){
 
 
     clock_t t1, t2;
@@ -291,9 +611,6 @@ void CompletePrivateKey(mat_ZZ& B, const ZZX * const PrivateKey)
 }
 
 
-
-
-
 void GPV(RR_t * v, const RR_t * const c, const RR_t s, const MSK_Data * const MSKD)
 {
 
@@ -375,16 +692,6 @@ void CompleteMSK(MSK_Data * MSKD, ZZX * MSK)
 
 }
 
-
-
-// void CompleteMPK(MPK_Data * MPKD, ZZ_pX MPK)
-// {
-//     MPKD->h = MPK;
-//     ZZXToFFT(MPKD->h_FFT, conv<ZZX>(MPK));
-// }
-
-
-
 void IBE_Extract(ZZX SK_id[2], vec_ZZ id, const MSK_Data * const MSKD)
 {
     unsigned int i;
@@ -418,344 +725,3 @@ void IBE_Extract(ZZX SK_id[2], vec_ZZ id, const MSK_Data * const MSKD)
     }
     
 }
-
-
-// unsigned long IBE_Verify_Key(const ZZX SK_id[2], const vec_ZZ id, const MSK_Data * const MSKD)
-// {
-//     unsigned int i;
-//     ZZX f,g,t,aux;
-
-//     f = MSKD -> PrK[0];
-//     g = MSKD -> PrK[1];
-    
-//     t = conv<ZZX>(id);
-//     aux = ((SK_id[0] - t)*f + g*SK_id[1])%phi;
-
-//     for(i=0; i<N0; i++)
-//     {
-//         aux[i] %= q1;
-//     }
-
-//     if( IsZero(aux) != 0)
-//     {
-//         cout << "The signature (s1,s2) doesn't verify the required equality [ (s1 - t)*f + g*s2 = 0 ] !\nActually, (s1 - t)*f + g*s2 = " << aux << endl << endl;
-//     }
-//     return IsZero(aux);
-// }
-
-
-// void IBE_Encrypt(long C[2][N0], const long m[N0], const long id0[N0], const MPK_Data * const MPKD)
-// {
-
-//     unsigned long i;
-//     long r[N0], e1[N0], e2[N0];
-//     CC_t r_FFT[N0], t_FFT[N0], aux1_FFT[N0], aux2_FFT[N0];
-
-//     for(i=0; i<N0; i++)
-//     {
-//         e1[i] = (rand()%3) - 1;
-//         e2[i] = (rand()%3) - 1;
-//         r[i] = (rand()%3) - 1;
-//     }
-
-//     MyIntFFT(r_FFT, r);
-//     MyIntFFT(t_FFT, id0);
-
-//     for(i=0; i<N0; i++)
-//     {
-//         aux1_FFT[i] = r_FFT[i]*((MPKD->h_FFT)[i]);
-//         aux2_FFT[i] = r_FFT[i]*t_FFT[i];
-//     }
-
-//     MyIntReverseFFT(C[0], aux1_FFT);
-//     MyIntReverseFFT(C[1], aux2_FFT);
-
-//     for(i=0; i<N0; i++)
-//     {
-//         C[0][i] = (C[0][i] + e1[i]               + q0/2)%q0 - (q0/2);
-//         C[1][i] = (C[1][i] + e2[i] + (q0/2)*m[i] + q0/2)%q0 - (q0/2);
-//     } 
-
-// }
-
-
-// void IBE_Decrypt(long message[N0], const long C[2][N0], const CC_t * const SKid_FFT)
-// {
-//     unsigned int i;
-//     CC_t c0_FFT[N0], aux_FFT[N0];
-
-//     MyIntFFT(c0_FFT, C[0]);
-
-//     for(i=0; i<N0; i++)
-//     {
-//         aux_FFT[i] = c0_FFT[i]*SKid_FFT[i];
-//     }
-
-//     MyIntReverseFFT(message, aux_FFT);
-
-//     for(i=0; i<N0; i++)
-//     {
-//         message[i] = C[1][i] - message[i];
-//         message[i] = ((unsigned long)(message[i] ))%q0;
-//         message[i] = (message[i] + (q0>>2) )/(q0>>1);
-//         message[i] %= 2;
-//     }
-
-// }
-
-
-
-//==============================================================================
-//==============================================================================
-//                             BENCHES AND TESTS
-//                   FOR EXTRACTION AND ENCRYPTION/DECRYPTION
-//==============================================================================
-//==============================================================================
-
-
-// void Extract_Bench(const unsigned int nb_extr, MSK_Data * MSKD)
-// {
-//     clock_t t1, t2;
-//     float diff;
-//     unsigned int i;
-//     vec_ZZ id;
-//     ZZX SK_id[2];
-
-//     t1 = clock();
-
-//     cout << "0%" << flush;
-//     for(i=0; i<nb_extr; i++)
-//     {
-//         id = RandomVector();
-
-//         IBE_Extract(SK_id, id, MSKD);
-//         if((i+1)%(nb_extr/10)==0)
-//         {
-//             cout << "..." << (i+1)/(nb_extr/10) << "0%" << flush;
-//         }
-//     }
-
-//     t2 = clock();
-//     diff = ((float)t2 - (float)t1)/1000000.0F;
-//     cout << "\n\nIt took " << diff << " seconds to extract " << nb_extr << " keys." << endl;
-//     cout << "That's " << (diff/nb_extr)*1000 << " milliseconds per key." << endl << endl;
-// }
-
-
-// void Encrypt_Bench(const unsigned int nb_cryp, MPK_Data * MPKD, MSK_Data * MSKD)
-// {
-//     clock_t t1, t2;
-//     double diff;
-//     unsigned int i,j;
-//     vec_ZZ id;
-//     ZZX SK_id[2], w;
-//     CC_t SKid_FFT[N0];
-//     long int message[N0], decrypted[N0];
-//     long int identity[N0], Ciphertext[2][N0];
-
-
-//     id = RandomVector();
-//     IBE_Extract(SK_id, id, MSKD);
-//     IBE_Verify_Key(SK_id, id, MSKD);
-//     ZZXToFFT(SKid_FFT, SK_id[1]);
-//     for(i=0; i<N0; i++)
-//     {
-//         identity[i] = conv<long int>(id[i]);
-//     }
-
-//     t1 = clock();
-
-//     cout << "0%" << flush;
-//     for(i=0; i<nb_cryp; i++)
-//     {
-
-//         for(j=0; j<N0; j++)
-//         {
-//             message[j] = (rand()%2);
-//         }
-
-//         IBE_Encrypt(Ciphertext, message, identity, MPKD);
-//         IBE_Decrypt(decrypted, Ciphertext, SKid_FFT);
-
-//         if((i+1)%(nb_cryp/10)==0)
-//         {
-//             cout << "..." << (i+1)/(nb_cryp/10) << "0%" << flush;
-//         }
-//     }
-
-//     t2 = clock();
-//     diff = ((double)t2 - (double)t1)/1000000.0l;
-//     cout << "\n\nIt took " << diff << " seconds to do " << nb_cryp << " encryptions and decryptions." << endl;
-//     cout << "That's " << (diff/nb_cryp)*1000 << " milliseconds per encryption+decryption." << endl;
-//     cout << "That's " << (diff/nb_cryp)*1000*1024/N0 << " milliseconds per encryption+decryption per Kilobit." << endl << endl;
-// }
-
-
-// void Extract_Test(const unsigned int nb_extr, MSK_Data * MSKD)
-// {
-//     unsigned int i, rep;
-//     vec_ZZ id;
-//     ZZX SK_id[2];
-
-//     rep = 0;
-
-//     cout << "0%" << flush;
-//     for(i=0; i<nb_extr; i++)
-//     {
-//         id = RandomVector();
-
-//         IBE_Extract(SK_id, id, MSKD);
-//         rep += IBE_Verify_Key(SK_id, id, MSKD);
-//         if((i+1)%(nb_extr/10)==0)
-//         {
-//             cout << "..." << (i+1)/(nb_extr/10) << "0%" << flush;
-//         }
-//     }
-
-//     cout << endl;
-//     if(rep == 0)
-//     {    cout << endl << nb_extr << " extractions successfully performed!" << endl << endl;    }
-//     else
-//     {    cout << endl << rep << " out of " << nb_extr << " extractions failed miserabily!" << endl << endl;    }
-// }
-
-
-
-// void DigSig2(const unsigned int nb_extr, MSK_Data * MSKD)
-// {
-//     unsigned int i, rep;
-//     vec_ZZ id;
-//     ZZX SK_id[2];
-
-//     rep = 0;
-
-
-//     //Gen Key
-//     cout <<"\n--1. Keygen--\n Done before this actual point.";
-//         //Build MSKD (done before on IBE.cc)
-
-//     //Sig
-//     cout <<"\n--2. Signature--";
-//         //Using id as our random vector
-    
-//     id = RandomVector();
-
-//     IBE_Extract(SK_id, id, MSKD);
-//     rep += IBE_Verify_Key(SK_id, id, MSKD);
-
-    
-//     ZZX f = MSKD -> PrK[0];
-//     ZZX g = MSKD -> PrK[1];
-//     ZZX t = conv<ZZX>(id);
-
-
-
-//     cout << "\nt: ";
-//     for (i=0; i < N0; i++){
-//         cout << t[i] << ",";
-//     }
-
-//     cout << "\nf: ";
-//     for (i=0; i < N0; i++){
-//         cout << f[i] << ",";
-//     }
-
-//     cout << "\ng: ";
-//     for (i=0; i < N0; i++){
-//         cout << g[i] << ",";
-//     }
-
-//     cout << "\nS1: ";
-//     for (i=0; i < N0; i++){
-//         cout << SK_id[0][i] << ",";
-//     }
-
-//     cout << "\nS2: ";
-//     for (i=0; i < N0; i++){
-//         cout << SK_id[1][i] << ",";
-//     }
-
-//     //Verify
-
-//     cout << "\n--Verify---\n";
-//     //T has been conv'ed above.
-//     ZZX h = conv<ZZX>(Quotient(f,g));
-  
-//     cout << "\nh: ";
-//     for (i=0; i < N0; i++){
-//         cout << h[i] << ",";
-//     }
-
-
-
-//     ZZX aux = (t - (SK_id[1]*h))%phi;
-
-//     cout << "\nRecovered S1: ";
-//     for (i=0; i < N0; i++){
-//         cout << aux[i]%q0 << ",";
-//     }
-
-//     //aux = ((SK_id[0] - t)*f + g*SK_id[1])%phi;
-
-//     cout <<"\n *Mosca (f and g) & (s1 and s2) are used oppositly than our paper. Also notice the ordering is in accending as per usual.";
-
-//     cout << endl;
-// }
-
-
-// void Encrypt_Test(const unsigned int nb_cryp, MPK_Data * MPKD, MSK_Data * MSKD)
-// {
-//     unsigned int i, j, rep;
-//     vec_ZZ id;
-//     ZZX SK_id[2], m, w;
-//     CC_t SKid_FFT[N0];
-//     long int id0[N0], Ciphertext[2][N0];
-//     long int message[N0], decrypted[N0];
-
-
-//     id = RandomVector();
-//     IBE_Extract(SK_id, id, MSKD);
-//     IBE_Verify_Key(SK_id, id, MSKD);
-//     ZZXToFFT(SKid_FFT, SK_id[1]);
-
-//     rep = 0;
-
-//     for(i=0; i<N0; i++)
-//     {
-//         id0[i] = conv<long int>(id[i]);
-//     }
-
-//     cout << "0%" << flush;
-//     for(i=0; i<nb_cryp; i++)
-//     {
-
-//         for(j=0; j<N0; j++)
-//         {
-//             message[j] = (rand()%2);
-//         }
-
-//         IBE_Encrypt(Ciphertext, message, id0, MPKD);
-//         IBE_Decrypt(decrypted, Ciphertext, SKid_FFT);
-        
-//         for(j=0; j<N0; j++)
-//         {
-//             if(message[j] != decrypted[j])
-//             {
-//                 cout << "ERROR : Dec(Enc(m)) != m " << endl;
-//                 rep++;
-//                 break;
-//             }
-//         }
-
-//         if((i+1)%(nb_cryp/10)==0)
-//         {
-//             cout << "..." << (i+1)/(nb_cryp/10) << "0%" << flush;
-//         }
-//     }
-
-//     cout << endl;
-//     if(rep == 0)
-//     {    cout << endl << nb_cryp << " encryptions+decryptions successfully performed!" << endl << endl;    }
-//     else
-//     {    cout << endl << rep << " out of " << nb_cryp << " encryptions+decryptions failed miserabily!" << endl << endl;    }
-// }
