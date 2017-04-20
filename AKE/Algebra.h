@@ -23,5 +23,6 @@ void ClassicMGS(RR_t Bstar[2*N0][2*N0], const RR_t B[2*N0][2*N0]);
 void FastMGS(RR_t Bst[2*N0][2*N0], const RR_t B[2*N0][2*N0]);
 
 void modCoeffs(ZZX& f, ZZ p);
+void modCoeffs(vec_ZZ& f, ZZ p);
 
 #endif

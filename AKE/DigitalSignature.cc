@@ -189,6 +189,10 @@ void HashH(vec_ZZ&  hashed, vec_ZZ& msg){
     //     cout << "m+r:" << hashed << "\n";
     // }
 
+    //cout << "\n----------HASH-----------------\n";
+    //cout << "INPUT:" << msg <<"\n";
+
+
     for(int i = 0; i < msg.length(); i++) {
         char f = (conv<int>(msg[i])%255);
         SHA256_Update(&ctx, &f, 1);
@@ -196,11 +200,12 @@ void HashH(vec_ZZ&  hashed, vec_ZZ& msg){
 
     SHA256_Final(digest, &ctx);
 
-
+    
     for(int i=0; i < 32 and i < N0; i++){
         //cout << int(digest[i]) << " ";
-        hashed[i] = conv<ZZ>(digest[i])%q0;
+        hashed[i] = conv<ZZ>(digest[i])%255;
     }
+    //cout << "OUTPUT:" << hashed << "\n";
     if (debug){
         cout << "Hashed H: " << hashed << "\n";
     }
@@ -211,7 +216,7 @@ void Sign2(ZZX s[2],vec_ZZ& m2, vec_ZZ& msg, MSK_Data* MSKD){
     vec_ZZ h1,f1,t;
 
     // 512: |m1|=496, 1024: |m1|= 1008
-
+    modCoeffs(msg,q1);
     int m1_size = 480;
     m1.SetLength(m1_size);
     m2.SetLength(msg.length()-m1_size);
@@ -243,7 +248,7 @@ void Sign2(ZZX s[2],vec_ZZ& m2, vec_ZZ& msg, MSK_Data* MSKD){
 
 
 
-    cout << "To Be Recovered:"<<m1 <<"\n";
+    //cout << "Message:"<<msg <<"\n";
 
     t = f1;
     t.append(h1);
@@ -268,7 +273,7 @@ void Sign2(ZZX s[2],vec_ZZ& m2, vec_ZZ& msg, MSK_Data* MSKD){
 
 bool Verify2(ZZX Kv,ZZX s[2], vec_ZZ& m2, vec_ZZ& m1){
     //Hash id
-    vec_ZZ m,t,t1,h1,f1,t2;
+    vec_ZZ t,t1,h1,f1,t2;
 
     const ZZX phi = Cyclo();
     vec_ZZ hashed = vec_ZZ();
@@ -285,10 +290,11 @@ bool Verify2(ZZX Kv,ZZX s[2], vec_ZZ& m2, vec_ZZ& m1){
     for (int i=0; i < 480; i++){
         t1[i] = t[i]%q0;
         if (i < 32){
-            h1[i] = t[i+480]%q0;
+            h1[i] = t[i+480];
         }
 
     }
+    modCoeffs(h1,q1);
 
 
 
@@ -304,11 +310,12 @@ bool Verify2(ZZX Kv,ZZX s[2], vec_ZZ& m2, vec_ZZ& m1){
     m1.SetLength(t1.length());
     f1.SetLength(t1.length());
     for (int i=0; i < t1.length(); i++){
-        m1[i] = (t1[i] - f1[i])%q0;
+        m1[i] = (t1[i] - f1[i]);
     }
 
-    m = m1;
-    m.append(m2);
+    modCoeffs(m1,q1);
+
+    m1.append(m2);
     //cout << "m: " << m1 << "\n";
     HashH(t2,m1);
 
@@ -404,7 +411,8 @@ void run_DS_example(){
         t2 = clock();
         t_ver = ((float)t2 - (float)t1)/1000000.0F;
 
-        cout <<"Recovery" << recovery;
+        cout << "VALID:"<<valid <<"\n";
+        //cout << recovery;
 
         //Not Certain of this part.
         // double norm1 = 0;

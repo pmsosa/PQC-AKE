@@ -174,9 +174,9 @@ void AKE_timed_example(){
 
 	//Alice sends Sigma1 to Bob 															//AlICE ----> simga1 = <Ke>1 ----> Bob
 		// Aka. Bob has access only to:
-		// - s_a[1] \ 
+		// - s_a[1] ] 
 		// - Ke_a   ]  -- Sent from Alice
-		// - r_a    / 
+		// - r_a    ] 
 		// - Kv_a   ]--- (Public) Obtained before hand.
 		cout << "\nTransmitting (A->b)\n";
 		cout << " +    Ke_a : " << Ke_a.length()*16 << "\n";
@@ -236,9 +236,9 @@ void AKE_timed_example(){
 
 	//Bob sends Sigma2 to Alice
 		// Aka. Alice has access to:
-		// c_Auth \ 
+		// c_Auth ] 
 		// s1_b   ] -- Sent from Bob
-		// r_b    /
+		// r_b    ]
 		// Kv_b   ] -- (Public Obtained before hand).
 		cout << "\nTransmitting (B->A)\n";
 		cout << " +  c_auth : " << c_Auth.length()*16 << "\n";
@@ -358,9 +358,11 @@ void AKE_timed_exampleMR(){
 
 		vec_ZZ r_a;
 		ZZX s_a[2];
+		vec_ZZ m2_a;
 
 			t1 = clock();
-		Sign(s_a,Ke_a,r_a,MSKD_a); //Ks_a == MSKD_a which contains f,g 						//ALICE: simga1 <- Sig(Ks1,Ke)
+		//TODO
+		Sign2(s_a,m2_a,Ke_a,MSKD_a); //Ks_a == MSKD_a which contains f,g 						//ALICE: simga1 <- Sig(Ks1,Ke)
 								   //s1 => renamed as s2 will be inside s_a[1]
 
 			t2 = clock();
@@ -370,9 +372,9 @@ void AKE_timed_exampleMR(){
 
 	//Alice sends Sigma1 to Bob 															//AlICE ----> simga1 = <Ke>1 ----> Bob
 		// Aka. Bob has access only to:
-		// - s_a[1] \ 
+		// - s_a[1] ] 
 		// - Ke_a   ]  -- Sent from Alice
-		// - r_a    / 
+		// - r_a    ] 
 		// - Kv_a   ]--- (Public) Obtained before hand.
 		cout << "\nTransmitting (A->b)\n";
 		cout << " +    Ke_a : " << Ke_a.length()*16 << "\n";
@@ -388,12 +390,18 @@ void AKE_timed_exampleMR(){
 		ZZX s_b[2];	
 		vec_ZZ r_b; 
 		vec_ZZ c_Auth;
+		vec_ZZ m1_a;
+		vec_ZZ m2_b;
 		//cout << Kv_a;
 			t1 = clock();
-		if ( Verify(conv<ZZX>(Kv_a),s_a,Ke_a,r_a) ){										//BOB: if (Ver(Kv1,simga1) != BOT) Then
+		//TODO
+		if ( Verify2(conv<ZZX>(Kv_a),s_a,m2_a,m1_a) ){										//BOB: if (Ver(Kv1,simga1) != BOT) Then
 				t2 = clock();
 				tb_ds_ver = ((float)t2 - (float)t1)/CLOCKS_PER_SEC * 1000;
-			
+			Ke_a = m1_a;
+			Ke_a.append(m2_a);
+			Ke_a_temp = conv<ZZX>(Ke_a);
+
 				t1 = clock();
 			Encapsulate(Ke_a_temp,c_b,k_b);													//BOB: (c,k) <- Enc(Ke)
 				t2 = clock();
@@ -409,9 +417,10 @@ void AKE_timed_exampleMR(){
 			c_Auth.append(conv<vec_ZZ>(c_b));
 
 			
-
+			
 				t1 = clock();
-			Sign(s_b, c_Auth, r_b, MSKD_b);	//Ks_a == MSKD_a which contains f,g 													//BOB: Sigma2 <- Sig(Ks2,(c,k))
+			//TODO
+			Sign2(s_b, m2_b,c_Auth, MSKD_b);	//Ks_a == MSKD_a which contains f,g 													//BOB: Sigma2 <- Sig(Ks2,(c,k))
 											//s1 => renamed as s2 will be inside s_a[1]
 
 
@@ -432,9 +441,9 @@ void AKE_timed_exampleMR(){
 
 	//Bob sends Sigma2 to Alice
 		// Aka. Alice has access to:
-		// c_Auth \ 
+		// c_Auth ] 
 		// s1_b   ] -- Sent from Bob
-		// r_b    /
+		// r_b    ]
 		// Kv_b   ] -- (Public Obtained before hand).
 		cout << "\nTransmitting (B->A)\n";
 		cout << " +  c_auth : " << c_Auth.length()*16 << "\n";
@@ -445,9 +454,14 @@ void AKE_timed_exampleMR(){
 
 	//Alice
 			t1 = clock();
-		if ( Verify(conv<ZZX>(Kv_b),s_b,c_Auth,r_b) ){
+		//TODO
+
+		vec_ZZ m1_b;
+		if ( Verify2(conv<ZZX>(Kv_b),s_b,m2_b,m1_b) ){
 				t2 = clock();
 				ta_ds_ver = ((float)t2 - (float)t1)/CLOCKS_PER_SEC * 1000;
+			c_Auth = m1_b;
+			c_Auth.append(m2_b);
 
 			ZZX k_a;
 			
@@ -704,7 +718,7 @@ int main(){
     if (true){
 	    //AKE Example
 	    cout <<"\n\n--RUNNING THE AKE Examples--\n\n";
-	    AKE_timed_example();
+	    AKE_timed_exampleMR();
 	    //AKE_clocked_example();
 	}
 

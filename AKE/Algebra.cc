@@ -44,6 +44,16 @@ void modCoeffs(ZZX& f, ZZ p){
     }
 }
 
+
+void modCoeffs(vec_ZZ& f, ZZ p){
+    ZZ pp = p/2;
+    for (int i=0;i < f.length();i++){
+        ZZ temp = f[i]%p;
+        if (temp>pp){ temp = temp - p;}
+        f[i] = temp;
+    }
+}
+
 //==============================================================================
 //Computes the squared norm of a polynomial f   
 //==============================================================================
