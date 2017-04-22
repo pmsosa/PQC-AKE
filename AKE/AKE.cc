@@ -68,6 +68,7 @@ knowledge of the CeCILL license and that you accept its terms.
 #include "cpucycles.h"
 
 #include <openssl/sha.h>
+#include "huffman.h"
 
 
 
@@ -447,10 +448,11 @@ void AKE_timed_exampleMR(){
 		// Kv_b   ] -- (Public Obtained before hand).
 		cout << "\nTransmitting (B->A)\n";
 		cout << " +  c_auth : " << c_Auth.length()*16 << "\n";
-		cout << " +      s1 : " << conv<vec_ZZ>(s_b[1]).length()*8 << "\n";
+		cout << " +      s1 : " << conv<vec_ZZ>(s_b[1])*8 << "\n";
 		cout << " +     r_b : " << r_b.length()*8 << "\n";
 		cout << "Total bits : " <<conv<vec_ZZ>(s_b[1]).length()*8+c_Auth.length()*16+r_b.length()*8 << "\n";
 
+		cout << "s1: "<<s_b[1] <<"\n";
 
 	//Alice
 			t1 = clock();
@@ -715,16 +717,21 @@ int main(){
 	    run_KEM_example();
 	}	
 
-    if (true){
+    if (false){
 	    //AKE Example
 	    cout <<"\n\n--RUNNING THE AKE Examples--\n\n";
 	    AKE_timed_exampleMR();
 	    //AKE_clocked_example();
 	}
 
-	if (true){
+	if (false){
 		cout <<"\n\n--WORKSPACE: MESSAGE-RECOVERY--\n\n";
 		run_DS_example();
+	}
+
+	if (true){
+		cout << "\n\n--WORKSPACE: GENERATE HUFFMAN--\n\n";
+		SampleSave();
 	}
     return 0;
 }
