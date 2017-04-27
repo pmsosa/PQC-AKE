@@ -32,58 +32,75 @@ const bool debug = false; //Print Debug info?
 
 void KEMKeyGen(ZZX& Kd, ZZX& Ke, ZZX& Kd_inv2){
     
-    bool valid = false;
-    int retries = 0;
-    while (!valid){
+
+    ZZX f,g,g_inv,g_inv2,f_inv,f_inv2;
+    bool fvalid = false;
+    bool gvalid = false;
+    int fretries = 0;
+    int gretries = 0;
+
+    while (!fvalid){
 
         try{
             //Build f & g        
-            ZZX f = RandomPolyFixedSqNorm(kem_norm,N0-1);
-            ZZX g = RandomPolyFixedSqNorm(kem_norm,N0-1);
+            f = RandomPolyFixedSqNorm(kem_norm,N0-1);
+            
+            //Check that f and g are invertible in both Zq[x]/<x^n+1> and Z2[x]/<x^n+1>
+            f_inv2 = conv<ZZX>(Inverse2(conv<ZZX>(f),2));     
+            f_inv = conv<ZZX>(Inverse2(conv<ZZX>(f),q0));
+ 
+            fvalid = true;
+            
+        }
+        catch (int e){
+            fretries += 1;
+            //Keep going!
+        }
+    }
+
+
+    while (!gvalid){
+
+        try{
+            //Build f & g        
+            g = RandomPolyFixedSqNorm(kem_norm,N0-1);
             
             
 
             //Check that f and g are invertible in both Zq[x]/<x^n+1> and Z2[x]/<x^n+1>
-            ZZX f_inv2 = conv<ZZX>(Inverse2(conv<ZZX>(f),2));
-            ZZX g_inv2 = conv<ZZX>(Inverse2(conv<ZZX>(g),2));            
-
-            ZZX f_inv = conv<ZZX>(Inverse2(conv<ZZX>(f),q0));
-            ZZX g_inv = conv<ZZX>(Inverse2(conv<ZZX>(g),q0));
+            g_inv2 = conv<ZZX>(Inverse2(conv<ZZX>(g),2));            
+            g_inv = conv<ZZX>(Inverse2(conv<ZZX>(g),q0));
 
              
-
-            
-
-
-
-            //Debuggin' Information
-            if (debug){
-                cout << "\n\nKEM - Keygen\n";
-                cout << "retries:" << retries << "\n";
-                cout << "f: "<< f << " ("<<deg(f)<<")"<<"\n";
-                cout << "g: "<< g << " ("<<deg(g)<<")"<<"\n";
-
-                cout << "f^-1: "<< f_inv << " ("<<deg(f_inv)<<")"<<"\n";
-                cout << "f^-1 (2): "<< f_inv2 << " ("<<deg(f_inv2)<<")"<<"\n";
-
-                cout << "g^-1: "<< g_inv << " ("<<deg(g_inv)<<")"<<"\n";
-                cout << "g^-1 (2): "<< g_inv2 << " ("<<deg(g_inv2)<<")"<<"\n";
-            }
-            valid = true;
-
-
-            Kd = g;
-            Kd_inv2 = g_inv2;
-            Ke = (f*g_inv)%phi;
-            //cout << "!"<<Ke<<"!";
-            modCoeffs(Ke,q1);
+            gvalid = true;
             
         }
         catch (int e){
-            retries += 1;
+            gretries += 1;
             //Keep going!
         }
     }
+
+
+    //Debuggin' Information
+    if (debug){
+        cout << "\n\nKEM - Keygen\n";
+        cout << "retries:" << fretries+gretries << "\n";
+        cout << "f: "<< f << " ("<<deg(f)<<")"<<"\n";
+        cout << "g: "<< g << " ("<<deg(g)<<")"<<"\n";
+
+        cout << "f^-1: "<< f_inv << " ("<<deg(f_inv)<<")"<<"\n";
+        cout << "f^-1 (2): "<< f_inv2 << " ("<<deg(f_inv2)<<")"<<"\n";
+
+        cout << "g^-1: "<< g_inv << " ("<<deg(g_inv)<<")"<<"\n";
+        cout << "g^-1 (2): "<< g_inv2 << " ("<<deg(g_inv2)<<")"<<"\n";
+    }
+
+    Kd = g;
+    Kd_inv2 = g_inv2;
+    Ke = (f*g_inv)%phi;
+    //cout << "!"<<Ke<<"!";
+    modCoeffs(Ke,q1);
 
     return;
 }

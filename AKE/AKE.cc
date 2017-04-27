@@ -749,10 +749,15 @@ void AKE_MR(float speed[17], long long cycles[17]){
 		else{ cout << "Alice: Abort!"; return; }	
 
 
-	//CHECK IF EVERYTHING WORKED!
+		//CHECK IF EVERYTHING WORKED!
 		if (IsZero(sk_a - sk_b)){
 			cout << "\nsk_a == sk_b; Successful AKE!\n";
 		}
+
+		// Only you can prevent memory leaks!
+		delete MSKD_a; MSKD_a = NULL;
+		delete MSKD_b; MSKD_b = NULL;
+
 
 		ta_total1 = ta_ds_keygen + ta_kem_keygen + ta_ds_sig + ta_ds_ver + ta_kem_dec + ta_h2 + ta_h1;
 		ta_total2 = ta_kem_keygen + ta_ds_sig + ta_ds_ver + ta_kem_dec + ta_h2 + ta_h1;
@@ -812,11 +817,13 @@ void AKE_MR(float speed[17], long long cycles[17]){
 
 }
 
+
+
+#define rep 101
+
 // https://www.programiz.com/cpp-programming/examples/standard-deviation
 template <typename T>
-
-#define rep 1
-void calculate_Mean_and_SD(T data[][17], int index)
+void calculate_Mean_and_SD(T data[][17], int index, T result[2])
 {
     T sum = 0.0, mean, standardDeviation = 0.0;
 
@@ -832,9 +839,12 @@ void calculate_Mean_and_SD(T data[][17], int index)
     for(i = 0; i < rep; ++i)
         standardDeviation += pow(data[i][index] - mean, 2);
 
-    cout << "  +Mean: " << mean << "\n";
+    //cout << "  +Mean: " << mean << "\n";
 
-    cout << "  +Std. Dev: " << sqrt(standardDeviation / rep) <<"\n";
+    //cout << "  +Std. Dev: " <<  <<"\n";
+
+    result[0] = mean;
+    result[1] = sqrt(standardDeviation / rep);
 }
 
 
@@ -844,7 +854,8 @@ int main(){
 
     srand(rdtsc());
 
-
+    //run_KEM_example();
+    //run_DS_example();
 
 	if (true){
 		cout << "\n\n--WORKSPACE: AKE MESSAGE-RECOVERY MEASURMENTS--\n\n";
@@ -857,33 +868,63 @@ int main(){
 		cout << "\n\n\n\n\nRESULTS======================================\n";
 		
 
-		calculate_Mean_and_SD(speed,15);
+		//SPEED
+		float result[17][2];
+		for (int i = 0; i< 17; i++){
+			calculate_Mean_and_SD(speed,i,result[i]);
+		}
 
+		cout << "N=" << N0 <<", q=" << q0 << "\n";
+		cout << "KEM_Norm=" << KEM_NORM << ", DS_Sigma=" << DS_SIGMA <<"\n\n";
+		cout << "\n\n========Time (ms)=======\n";
+		cout << "\n==ALICE==\n";
+		cout << "- DS_keygen  :"<< result[0][0]		<< "\t| " << result[0][1]	<<"\n\n";
+		cout << "- KEM_keygen :"<< result[1][0]		<< "\t| " << result[1][1]	<<"\n";
+		cout << "- DS_sign    :"<< result[2][0]		<< "\t| " << result[2][1]	<<"\n";
+		cout << "- DS_verify  :"<< result[3][0]		<< "\t| " << result[3][1]	<<"\n";
+		cout << "- KEM_dec    :"<< result[4][0]		<< "\t| " << result[4][1]	<<"\n";
+		cout << "- H2         :"<< result[5][0]		<< "\t| " << result[5][1]	<<"\n";
+		cout << "- H1         :"<< result[6][0]		<< "\t| " << result[6][1]	<<"\n";
+		cout << " TOTAL (ALL) :"<< result[7][0]		<< "\t| " << result[7][1]	<<"\n";
+		cout << " TOTAL (AKE) :"<< result[8][0] 	<< "\t| " << result[8][1]	<<"\n";
 
+		cout << "\n==BOB==\n";
+		cout << "- DS_keygen  :"<< result[9][0]		<< "\t| " << result[9][1]	<<"\n\n";
+		cout << "- DS_verify  :"<< result[10][0]	<< "\t| " << result[10][1]	<<"\n";
+		cout << "- KEM_enc    :"<< result[11][0]	<< "\t| " << result[11][1]	<<"\n";
+		cout << "- H2         :"<< result[12][0]	<< "\t| " << result[12][1]	<<"\n";
+		cout << "- DS_sign    :"<< result[13][0]	<< "\t| " << result[13][1]	<<"\n";
+		cout << "- H1         :"<< result[14][0]	<< "\t| " << result[14][1]	<<"\n";
+		cout << " TOTAL (ALL) :"<< result[15][0] 	<< "\t| " << result[15][1]	<<"\n";
+		cout << " TOTAL (AKE) :"<< result[16][0] 	<< "\t| " << result[16][1]	<<"\n";
 
-		// cout << "N=" << N0 <<", q=" << q0 << "\n";
-		// cout << "KEM_Norm=" << KEM_NORM << ", DS_Sigma=" << DS_SIGMA <<"\n\n";
-		// cout << "\n\n========Time (ms) | Cycles=======\n";
-		// cout << "\n==ALICE==\n";
-		// cout << "- DS_keygen  :"<< ta_ds_keygen		<< "\t| " << ca_ds_keygen	<<"\n\n";
-		// cout << "- KEM_keygen :"<< ta_kem_keygen	<< "\t| " << ca_kem_keygen	<<"\n";
-		// cout << "- DS_sign    :"<< ta_ds_sig		<< "\t| " << ca_ds_sig		<<"\n";
-		// cout << "- DS_verify  :"<< ta_ds_ver		<< "\t| " << ca_ds_ver		<<"\n";
-		// cout << "- KEM_dec    :"<< ta_kem_dec		<< "\t| " << ca_kem_dec		<<"\n";
-		// cout << "- H2         :"<< ta_h2			<< "\t| " << ca_h2			<<"\n";
-		// cout << "- H1         :"<< ta_h1			<< "\t| " << ca_h1			<<"\n";
-		// cout << " TOTAL (ALL) :"<< ta_total1		<< "\t| " << ca_total1		<<"\n";
-		// cout << " TOTAL (AKE) :"<< ta_total2 		<< "\t| " << ca_total2		<<"\n";
+		//CYCLES
+		long long cresult[17][2];
+		for (int i = 0; i< 17; i++){
+			calculate_Mean_and_SD(cycles,i,cresult[i]);
+		}
 
-		// cout << "\n==BOB==\n";
-		// cout << "- DS_keygen  :"<< tb_ds_keygen		<< "\t| " << cb_ds_keygen	<<"\n\n";
-		// cout << "- DS_verify  :"<< tb_ds_ver		<< "\t| " << cb_ds_ver		<<"\n";
-		// cout << "- KEM_enc    :"<< tb_kem_enc		<< "\t| " << cb_kem_enc		<<"\n";
-		// cout << "- H2         :"<< tb_h2			<< "\t| " << cb_h2			<<"\n";
-		// cout << "- DS_sign    :"<< tb_ds_sig		<< "\t| " << cb_ds_sig		<<"\n";
-		// cout << "- H1         :"<< tb_h1			<< "\t| " << cb_h1			<<"\n";
-		// cout << " TOTAL (ALL) :"<< tb_total1 		<< "\t| " << cb_total1		<<"\n";
-		// cout << " TOTAL (AKE) :"<< tb_total2 		<< "\t| " << cb_total2		<<"\n";		
+		cout << "\n\n========Cycles=======\n";
+		cout << "\n==ALICE==\n";
+		cout << "- DS_keygen  :"<< cresult[0][0]	<< "\t| " << cresult[0][1]	<<"\n\n";
+		cout << "- KEM_keygen :"<< cresult[1][0]	<< "\t| " << cresult[1][1]	<<"\n";
+		cout << "- DS_sign    :"<< cresult[2][0]	<< "\t| " << cresult[2][1]	<<"\n";
+		cout << "- DS_verify  :"<< cresult[3][0]	<< "\t| " << cresult[3][1]	<<"\n";
+		cout << "- KEM_dec    :"<< cresult[4][0]	<< "\t| " << cresult[4][1]	<<"\n";
+		cout << "- H2         :"<< cresult[5][0]	<< "\t| " << cresult[5][1]	<<"\n";
+		cout << "- H1         :"<< cresult[6][0]	<< "\t| " << cresult[6][1]	<<"\n";
+		cout << " TOTAL (ALL) :"<< cresult[7][0]	<< "\t| " << cresult[7][1]	<<"\n";
+		cout << " TOTAL (AKE) :"<< cresult[8][0] 	<< "\t| " << cresult[8][1]	<<"\n";
+
+		cout << "\n==BOB==\n";
+		cout << "- DS_keygen  :"<< cresult[9][0]	<< "\t| " << cresult[9][1]	<<"\n\n";
+		cout << "- DS_verify  :"<< cresult[10][0]	<< "\t| " << cresult[10][1]	<<"\n";
+		cout << "- KEM_enc    :"<< cresult[11][0]	<< "\t| " << cresult[11][1]	<<"\n";
+		cout << "- H2         :"<< cresult[12][0]	<< "\t| " << cresult[12][1]	<<"\n";
+		cout << "- DS_sign    :"<< cresult[13][0]	<< "\t| " << cresult[13][1]	<<"\n";
+		cout << "- H1         :"<< cresult[14][0]	<< "\t| " << cresult[14][1]	<<"\n";
+		cout << " TOTAL (ALL) :"<< cresult[15][0] 	<< "\t| " << cresult[15][1]	<<"\n";
+		cout << " TOTAL (AKE) :"<< cresult[16][0] 	<< "\t| " << cresult[16][1]	<<"\n";
 
 	}
 

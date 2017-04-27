@@ -349,7 +349,7 @@ bool Verify2(ZZX Kv,ZZX s[2], vec_ZZ& m2, vec_ZZ& m1){
 
 
 
-void run_DS_example(){
+void run_DS_exampleMR(){
 
 
     clock_t t1, t2;
@@ -450,7 +450,7 @@ void run_DS_example(){
 }
 
 
-void run_DS_example_orig(){
+void run_DS_example(){
 
 
     clock_t t1, t2;

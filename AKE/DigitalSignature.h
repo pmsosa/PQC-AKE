@@ -18,6 +18,7 @@ void Sign2(ZZX s[2],vec_ZZ& m2, vec_ZZ& msg, MSK_Data* MSKD);
 bool Verify2(ZZX Kv,ZZX s[2], vec_ZZ& m2, vec_ZZ& m1);
 
 void run_DS_example();
+void run_DS_exampleMR();
 
 
 void Keygen(ZZ_pX& PublicKey, ZZX* PrivateKey);
