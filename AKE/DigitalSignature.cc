@@ -217,7 +217,7 @@ void Sign2(ZZX s[2],vec_ZZ& m2, vec_ZZ& msg, MSK_Data* MSKD){
 
     // 512: |m1|=496, 1024: |m1|= 1008
     modCoeffs(msg,q1);
-    int m1_size = 480;
+    int m1_size = N0-32;
     m1.SetLength(m1_size);
     m2.SetLength(msg.length()-m1_size);
 
@@ -241,7 +241,7 @@ void Sign2(ZZX s[2],vec_ZZ& m2, vec_ZZ& msg, MSK_Data* MSKD){
     //cout << "f1:"<<f1 <<"\n";
     //cout << "h1:"<<h1 <<"\n";
     //cout << "f1:"<<f1 << "\n";
-    f1.SetLength(480);
+    f1.SetLength(m1_size);
     for (int i=0; i < f1.length(); i++){
         f1[i] = (f1[i]+m1[i])%q0;
     }
@@ -282,15 +282,15 @@ bool Verify2(ZZX Kv,ZZX s[2], vec_ZZ& m2, vec_ZZ& m1){
     c = c + s[0];
     t = conv<vec_ZZ>(c);
 
-    t1.SetLength(480);
+    t1.SetLength(N0-32);
     h1.SetLength(32);
 
 
 
-    for (int i=0; i < 480; i++){
+    for (int i=0; i < N0-32; i++){
         t1[i] = t[i]%q0;
         if (i < 32){
-            h1[i] = t[i+480];
+            h1[i] = t[i+N0-32];
         }
 
     }

@@ -823,21 +823,21 @@ void AKE_MR(float speed[17], long long cycles[17]){
 
 // https://www.programiz.com/cpp-programming/examples/standard-deviation
 template <typename T>
-void calculate_Mean_and_SD(T data[][17], int index, T result[2])
+void calculate_Mean_and_SD(T data[][17], int index,float result[2])
 {
-    T sum = 0.0, mean, standardDeviation = 0.0;
+    float sum = 0.0, mean, standardDeviation = 0.0;
 
     int i;
 
     for(i = 0; i < rep; ++i)
     {
-        sum += data[i][index];
+        sum += (float) data[i][index];
     }
 
     mean = sum/rep;
 
     for(i = 0; i < rep; ++i)
-        standardDeviation += pow(data[i][index] - mean, 2);
+        standardDeviation += pow((float)data[i][index] - mean, 2);
 
     //cout << "  +Mean: " << mean << "\n";
 
@@ -899,7 +899,7 @@ int main(){
 		cout << " TOTAL (AKE) :"<< result[16][0] 	<< "\t| " << result[16][1]	<<"\n";
 
 		//CYCLES
-		long long cresult[17][2];
+		float cresult[17][2];
 		for (int i = 0; i< 17; i++){
 			calculate_Mean_and_SD(cycles,i,cresult[i]);
 		}
