@@ -1,3 +1,11 @@
+////
+// Key Encapsulation Mechanism Module
+// Lattice-Based Post-Quantum Authenticated Key Exchange
+// Designed by Del Pino, Lyubasgevsky, Pointcheval
+// Implemented by Pedro Miguel Sosa
+// FFT, GPV, Sampling code repurpose from Thomas Prest's IBE scheme
+////
+
 #include <stdlib.h>
 #include <assert.h>
 #include <math.h>
